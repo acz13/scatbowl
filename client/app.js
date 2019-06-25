@@ -18,23 +18,35 @@ let messages=[];
 let scores=[];
 let words;
 let fullText='';
-
+let lastWordTime;
+const speed=100;
 var socket = io("http://127.0.0.1:3000/");
-
+let finishedQuestion=false;
+let delay=0;
+let displayText;
 socket.on('chatMessage', (message) => {
     messages.push(message);
     updateChat();
 });
 
-socket.on('scores', (updatedScores) => {
-    console.log('this happened');
-    scores=updatedScores;
-
-    //This could probably be done better ngl 
-    if (playerName==""){
-        playerName=scores[scores.length-1].player;
+socket.on('startingInformation', (startingInformation) => {
+    scores=startingInformation.scores;
+    playerName=startingInformation.name;
+    words=startingInformation.startWord;
+    delay=startingInformation.delayTime;
+    document.getElementById('name').value=playerName;
+    fullText=startingInformation.question;
+    if (startingInformation.canBuzz==false){
+        document.getElementById("buzzButton").style.disabled = true;
+        if (whoBuzzed==playerName){
+            document.getElementById("answer").style.visibility = "visible";
+        }
     }
-    updateScores();
+    else{
+        //displayText = setInterval(nextWord, speed);
+        setTimeout(function(){displayText = setInterval(nextWord, speed)},delay);
+        updateScores();
+    }
 });
 
 socket.on('updateScore', (scoreChange)=> {
@@ -56,29 +68,30 @@ window.onload = function startingInfo(){
     console.log('loading');
     messages =[
     ];
-
-
-    updateChat();  
-    updateScores();
-    startNewQuestion();
+    socket.emit('getStartingInfo');
 }
 
-function startNewQuestion(){
+function nextQuestion(){
     socket.emit('nextQuestion');
-    const finishedQuestion=false;
-    words=0;
-    displayText;
 }
-
 
 socket.on('nextQuestion', (nextQuestion)=>{
-    fullText=nextQuestion;
+    clearInterval(displayText);
+    words=0;
+    fullText=nextQuestion.questionText;
+    document.getElementById("buzzButton").style.disabled = false;
+    document.getElementById("answer").style.visibility = "hidden";
+    finishedQuestion=false;
+    displayText = setInterval(nextWord, speed);
 });
 
-var displayText = setInterval(function(){
-    words=words+1;
+
+function nextWord(){
+    time=new Date();
+    lastWordTime=(((time.getHours()*60+time.getMinutes())*60+time.getSeconds())*1000+time.getMilliseconds());
     const textToShow = fullText.split(" ").splice(0,words).join(" ");
     const remainingText = fullText.split(" ").splice(words).join(" ");
+    words=words+1;
     questionShowing.innerHTML=textToShow;
     questionHidden.innerHTML=remainingText;
     
@@ -86,22 +99,36 @@ var displayText = setInterval(function(){
         clearInterval(displayText);
         finishedQuestion=true;
     }
-}, 100)
+}
 
 function buzz(){
-    document.getElementById("buzzButton").style.display = "none";
-    document.getElementById("answer").style.display = "block";
-    clearInterval(displayText);
+    time=new Date();
+
+    socket.emit('buzz', {
+        name:playerName,
+        timeSince: (words*speed+(((time.getHours()*60+time.getMinutes())*60+time.getSeconds())*1000+time.getMilliseconds())-lastWordTime)
+    })
 }
+
+socket.on('buzz', (whoBuzzed) => {
+    document.getElementById("buzzButton").style.disabled = true;
+    if (whoBuzzed==playerName){
+        document.getElementById("answer").style.visibility = "visible";
+    }
+    clearInterval(displayText);
+});
+
+socket.on('getCurrentPlace',()=>{
+    time = new Date();
+    const place=(words*speed+(((time.getHours()*60+time.getMinutes())*60+time.getSeconds())*1000+time.getMilliseconds())-lastWordTime)
+    socket.emit('currentPlace',place);
+});
 
 function submitAnswer(){
     time = new Date();
     hours=time.getHours();
     minutes=time.getMinutes();
-
-    console.log(document.getElementById('answer').value.toLowerCase());
-
-    socket.emit('submitAnswer', {name: playerName, answer: document.getElementById('answer').value.toLowerCase(), hours: hours, minutes: minutes});
+    socket.emit('submitAnswer', {name: playerName, answer: document.getElementById('answer').value.toLowerCase()});
 }
 
 
@@ -146,7 +173,6 @@ function submitText(){
     const message={
         author: playerName,
         content: document.getElementById('textChat').value,
-        time: "" + hours + ":" + (String(minutes).length==2 ? minutes:"0"+minutes),
         type: "chat"
     };
     socket.emit('chatMessage', message);
@@ -187,23 +213,39 @@ document.getElementById('textChat').onkeydown = function(e){
  //changes name on enter
  document.getElementById('name').onkeydown = function(e){
     if(e.keyCode == 13){
-        
         const oldPlayerName=playerName;
         playerName=document.getElementById('name').value;
-        console.log(playerName);
-        
-        let scoresID=0;
-        for (x of scores){ 
-            if (x.player==oldPlayerName){
-                scoresID=scores.indexOf(x);
+
+        if (legalName(playerName) && playerName!=oldPlayerName){
+            let scoresID=0;
+            for (x of scores){ 
+                if (x.player==oldPlayerName){
+                    scoresID=scores.indexOf(x);
+                }
+            }
+            scores[scoresID].player=playerName;
+            
+            socket.emit('nameChange',{
+                newName: playerName,
+                oldName: oldPlayerName
+            });
+            updateScores();
+        }
+
+        else{
+            if (playerName!=oldPlayerName){
+                window.alert("name taken");
             }
         }
-        scores[scoresID].player=playerName;
-        
-        socket.emit('nameChange',{
-            newName: playerName,
-            oldName: oldPlayerName
-        });
-        updateScores();
     }
  }; 
+
+ 
+function legalName(name){
+    for (scoreItem of scores){
+        if (scoreItem.player==name){
+            return(false);
+        }
+    }
+    return(true);
+}
