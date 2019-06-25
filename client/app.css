@@ -1,0 +1,104 @@
+.text
+{
+    color: black;
+}
+
+.hidden{
+    color: white;
+    user-select: none;
+}
+
+.question{
+    border-style:solid; 
+    border-color:grey;
+    padding:5px;
+    margin:5px;
+    margin-bottom:10px;
+    max-width: 600px;
+}
+.buzzButton {
+    margin:5px;
+    margin-top:-5px;
+    border-radius: 15px;
+    background-color:red; /* Green */
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    display: inline-block;
+    font-size: 16px;
+}
+
+.settingsButton {
+    border-radius: 5px;
+    width: 225px;
+    margin:5px;
+    background-color: darkgray;
+    border: black;
+    color: blue;
+    text-align: center;
+    padding: 10px;
+    display: inline-block;
+    font-size: 12px;
+}
+
+.answer {
+    margin:5px;
+    padding: 5px;
+    width:100%;
+    max-width: 600px;
+    font-size: 24px;
+}
+
+.scoreboard {
+    border-style:solid;
+    border-color:gray;
+    padding:10px;
+    padding-bottom:5px;
+    margin:5px;
+    width: 200px;
+    height: 100px;
+    overflow-y: auto;
+}
+
+.score {
+    color: red;
+    margin-bottom: 10px;
+    width: 100%;
+    height: 20px;
+    background-color: lightgrey;
+}
+.message {
+    color: red;
+    margin-bottom: 10px;
+    width: 100%;
+    height: 20px;
+}
+
+.questionAndScore {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: row;
+}
+
+.chat {
+    padding:15px;
+    border-radius: 25px;
+    max-width: 600px;
+    height:300px;
+    background-color:rgb(220,220,220);
+    overflow-y: auto;
+}
+
+.textChat {
+    margin: 5px;
+
+}
+
+.notification {
+    color: red;
+    margin-bottom: 10px;
+    width: 100%;
+    height: 20px;
+    font-style: italic;
+}

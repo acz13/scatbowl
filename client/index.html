@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temp Title</title>
+    <link rel="stylesheet" href="app.css"> 
+</head>
+
+<body>
+    <header>
+            <div class = "questionInformation">
+                <p>Scat Bowl 2019</p>
+            </div>
+            <span>Enter name: </span><input type="text" id="name" value="SCAT"></input>
+            <div class = "questionAndScore">
+                <div class = "question">
+                    <span class="text" id="questionShowing"></span>
+                    <span class="hidden" id="questionHidden"></span>
+                </div>
+                <div class="scoreAndSettings">
+                    <div class = "scoreboard" id = "scoreboard"></div>
+                    <!--
+                    <input type="button" class="settingsButton" value="Settings">
+                    -->                
+                </div>
+            </div>
+            <div><input type="button" class="buzzButton" id="buzzButton" value="Buzzer" onclick="buzz();"></div>
+            <input type="text" class="answer" id="answer" placeholder="Answer" style="display:none">
+            
+            <input type="text" class="textChat" id="textChat" placeholder="Type chat here.">
+            <div class ="chat" id="chat"> </div>
+        
+        
+
+    </header>
+    
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.0/socket.io.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
