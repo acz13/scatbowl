@@ -26,10 +26,12 @@
                     -->                
                 </div>
             </div>
-            <div><input type="button" class="buzzButton" id="buzzButton" value="Buzzer" onclick="buzz();"></div>
-            <input type="text" class="answer" id="answer" placeholder="Answer" style="display:none">
-            
+            <span>
+            <input type="button" class="buzzButton" id="buzzButton" value="Buzzer" onclick="buzz();">
+            <div><input type="text" class="answer" id="answer" placeholder="Answer" style="visibility:hidden"></div>
+            </span>
             <input type="text" class="textChat" id="textChat" placeholder="Type chat here.">
+            <input type="button" id="nextButton" value="Next Question" onclick="nextQuestion();">
             <div class ="chat" id="chat"> </div>
         
         
