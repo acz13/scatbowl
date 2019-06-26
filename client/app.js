@@ -1,13 +1,3 @@
-//import { start } from "repl";
-
-/*
-socket.on('message', message => {
-    console.log(message);
-});
-*/
-
-
-
 // I was really inconsistent on using these btw
 const question = document.getElementById('question');
 const chat = document.getElementById('chat');
@@ -37,11 +27,10 @@ socket.on('startingInformation', (startingInformation) => {
     document.getElementById('name').value=playerName;
     fullText=startingInformation.question;
     if (startingInformation.canBuzz==false){
-        document.getElementById("buzzButton").style.disabled = true;
+        document.getElementById("buzzButton").disabled = true;
+        document.getElementById("nextButton").disabled = true;
+
         writingQuestion=false;
-        if (whoBuzzed==playerName){
-            document.getElementById("answer").style.visibility = "visible";
-        }
     }
     else{
         writingQuestion=true;
@@ -54,15 +43,34 @@ socket.on('startingInformation', (startingInformation) => {
 socket.on('updateScore', (scoreChange)=> {
     let scoresID=0;
     playerToChange=scoreChange.player;
+    console.log(playerToChange);
+    console.log(JSON.stringify(scores));
     changeAmount=scoreChange.scoreChange;
 
     for (x of scores){
-        if (x.player==scoreChange.name){
+        if (x.player==playerToChange){
+            console.log("it noticed");
             scoresID=scores.indexOf(x);
         }
     }
     scores[scoresID].value+=changeAmount;
     updateScores();
+
+    document.getElementById("answer").value="";
+    document.getElementById("answer").style.visibility = "hidden";
+    document.getElementById("nextButton").disabled = false;
+
+    if (changeAmount>0){
+        finishedQuestion=true;
+        words=fullText.length;
+    }
+    else{
+        document.getElementById("buzzButton").disabled = false;
+        lastWordTime=getTime();
+        setTimeout(nextWord,speed);
+        writingQuestion=true;
+    }
+
 });
 
 window.onload = function startingInfo(){
@@ -80,7 +88,9 @@ socket.on('nextQuestion', (nextQuestion)=>{
     finishedQuestion=false;
     words=0;
     fullText=nextQuestion.questionText;
-    document.getElementById("buzzButton").style.disabled = false;
+    document.getElementById("buzzButton").disabled = false;
+    document.getElementById("nextButton").disabled = false;
+
     document.getElementById("answer").style.visibility = "hidden";
     lastWordTime=getTime();
     setTimeout(nextWord, speed);
@@ -91,7 +101,7 @@ function nextWord(){
     time=new Date();
     const textToShow = fullText.split(" ").splice(0,words).join(" ");
     const remainingText = fullText.split(" ").splice(words).join(" ");
-    console.log("timeChange: "+getTime()-lastWordTime);
+    //console.log("getTime(): "+(getTime()-lastWordTime));
     wordsChange=(Math.floor(getTime()-lastWordTime)/speed);
     words+=wordsChange;
     if (wordsChange!=0){
@@ -106,14 +116,12 @@ function nextWord(){
         finishedQuestion=true;
     }
     if (writingQuestion){
-        console.log(delay);
         setTimeout(nextWord, delay);
     }
 }
 
 function buzz(){
     time=new Date();
-
     socket.emit('buzz', {
         name:playerName,
         timeSince: (words*speed+getTime()-lastWordTime),
@@ -121,7 +129,8 @@ function buzz(){
 }
 
 socket.on('buzz', (whoBuzzed) => {
-    document.getElementById("buzzButton").style.disabled = true;
+    document.getElementById("buzzButton").disabled = true;
+    document.getElementById("nextButton").disabled = true;
     if (whoBuzzed==playerName){
         document.getElementById("answer").style.visibility = "visible";
     }
@@ -135,7 +144,12 @@ socket.on('getCurrentPlace',()=>{
 });
 
 function submitAnswer(){
-    socket.emit('submitAnswer', {name: playerName, answer: document.getElementById('answer').value.toLowerCase()});
+    socket.emit('submitAnswer', {
+        name: playerName, 
+        answer: document.getElementById('answer').value.toLowerCase(),
+        finishedQuestion: finishedQuestion,
+        power: !fullText.split(" ").splice(0,words).join(" ").includes("(*)") //This doesn't work with IE, so should probably just write a function, but I'm lazy rn
+    });
 }
 
 
