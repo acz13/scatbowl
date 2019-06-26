@@ -23,7 +23,7 @@ const speed=100;
 var socket = io("http://127.0.0.1:3000/");
 let finishedQuestion=false;
 let delay=0;
-let displayText;
+let writingQuestion;
 socket.on('chatMessage', (message) => {
     messages.push(message);
     updateChat();
@@ -38,13 +38,15 @@ socket.on('startingInformation', (startingInformation) => {
     fullText=startingInformation.question;
     if (startingInformation.canBuzz==false){
         document.getElementById("buzzButton").style.disabled = true;
+        writingQuestion=false;
         if (whoBuzzed==playerName){
             document.getElementById("answer").style.visibility = "visible";
         }
     }
     else{
-        //displayText = setInterval(nextWord, speed);
-        setTimeout(function(){displayText = setInterval(nextWord, speed)},delay);
+        writingQuestion=true;
+        lastWordTime=getTime();
+        setTimeout(nextWord,delay);
     }
     updateScores();
 });
@@ -59,7 +61,6 @@ socket.on('updateScore', (scoreChange)=> {
             scoresID=scores.indexOf(x);
         }
     }
-    console.log(scores);
     scores[scoresID].value+=changeAmount;
     updateScores();
 });
@@ -75,28 +76,38 @@ function nextQuestion(){
 }
 
 socket.on('nextQuestion', (nextQuestion)=>{
-    clearInterval(displayText);
+    writingQuestion=true;
+    finishedQuestion=false;
     words=0;
     fullText=nextQuestion.questionText;
     document.getElementById("buzzButton").style.disabled = false;
     document.getElementById("answer").style.visibility = "hidden";
-    finishedQuestion=false;
-    displayText = setInterval(nextWord, speed);
+    lastWordTime=getTime();
+    setTimeout(nextWord, speed);
 });
 
 
 function nextWord(){
     time=new Date();
-    lastWordTime=(((time.getHours()*60+time.getMinutes())*60+time.getSeconds())*1000+time.getMilliseconds());
     const textToShow = fullText.split(" ").splice(0,words).join(" ");
     const remainingText = fullText.split(" ").splice(words).join(" ");
-    words=words+1;
+    console.log("timeChange: "+getTime()-lastWordTime);
+    wordsChange=(Math.floor(getTime()-lastWordTime)/speed);
+    words+=wordsChange;
+    if (wordsChange!=0){
+        lastWordTime=getTime();
+    }
+    delay=(speed-((getTime()-lastWordTime)%speed));
     questionShowing.innerHTML=textToShow;
     questionHidden.innerHTML=remainingText;
     
     if(fullText != "" && textToShow==fullText){
-        clearInterval(displayText);
+        writingQuestion=false;
         finishedQuestion=true;
+    }
+    if (writingQuestion){
+        console.log(delay);
+        setTimeout(nextWord, delay);
     }
 }
 
@@ -105,7 +116,7 @@ function buzz(){
 
     socket.emit('buzz', {
         name:playerName,
-        timeSince: (words*speed+(((time.getHours()*60+time.getMinutes())*60+time.getSeconds())*1000+time.getMilliseconds())-lastWordTime),
+        timeSince: (words*speed+getTime()-lastWordTime),
     })
 }
 
@@ -114,19 +125,16 @@ socket.on('buzz', (whoBuzzed) => {
     if (whoBuzzed==playerName){
         document.getElementById("answer").style.visibility = "visible";
     }
-    clearInterval(displayText);
+    writingQuestion=false;
 });
 
 socket.on('getCurrentPlace',()=>{
     time = new Date();
-    const place=(words*speed+(((time.getHours()*60+time.getMinutes())*60+time.getSeconds())*1000+time.getMilliseconds())-lastWordTime)
+    const place=(words*speed+getTime()-lastWordTime)
     socket.emit('currentPlace',place);
 });
 
 function submitAnswer(){
-    time = new Date();
-    hours=time.getHours();
-    minutes=time.getMinutes();
     socket.emit('submitAnswer', {name: playerName, answer: document.getElementById('answer').value.toLowerCase()});
 }
 
@@ -166,9 +174,6 @@ function createScoreHTML(score){
 }
 
 function submitText(){
-    time = new Date();
-    hours=time.getHours();
-    minutes=time.getMinutes();
     const message={
         author: playerName,
         content: document.getElementById('textChat').value,
@@ -249,4 +254,9 @@ function legalName(name){
         }
     }
     return(true);
+}
+
+function getTime(){
+    time=new Date();
+    return(((time.getHours()*60+time.getMinutes())*60+time.getSeconds())*1000+time.getMilliseconds());
 }
