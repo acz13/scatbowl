@@ -10,7 +10,7 @@ let correctAnswer='';
 const scores=[];
 let scoresID=0;
 
-const buzzes=[];
+let buzzes=[];
 let currentPlaces=[];
 let canBuzz=true;
 let startWord;
@@ -70,7 +70,6 @@ io.on('connection', (socket) => {
             const averagePlace = getAverage() ? getAverage() : 0;
             startWord = Math.floor(averagePlace/100);  //the 100 is the speed, probably should change it to a var
             delayTime = 100-averagePlace % 100;
-            console.log("json " +JSON.stringify(scores));
             io.to(socket.id).emit('startingInformation', {
                 scores: scores.roomJoined,
                 name: genNewName,
@@ -94,21 +93,20 @@ io.on('connection', (socket) => {
     });
 
     socket.on('chatMessage', (message) => {
-        message.time=getTime();
+        message.time=getFormattedTime();
         io.in(roomJoined).emit('chatMessage', message);
     });
 
     socket.on('buzz', (buzzInfo) => {
         buzzes.push(buzzInfo);
         const name = buzzInfo.name;
-        const timeSince = buzzInfo.timeSince;
         setTimeout(()=>{
             buzzes.sort((a, b) => (a.timeSince > b.timeSince) ? 1 : -1)
             if(canBuzz&&buzzes[0].name==name){
                 canBuzz=false;
                 io.in(roomJoined).emit('chatMessage',{
                     content: name + " buzzed",
-                    time: getTime(),
+                    time: getFormattedTime(),
                     type: "notification"
                 });
                 io.in(roomJoined).emit('buzz',name)        
@@ -119,15 +117,19 @@ io.on('connection', (socket) => {
     socket.on('submitAnswer', (answerInfo) => {
         const name = answerInfo.name;
         const answer = answerInfo.answer;
- 
+        const finishedQuestion = answerInfo.finishedQuestion;
+        const power = answerInfo.power;
+        canBuzz=true;
+        buzzes=[];
         if (answer==correctAnswer){
+            const points=((power) ? 15 : 10);
             io.in(roomJoined).emit('updateScore', {
                 player: name,
-                scoreChange: 10
+                scoreChange: points
             });
             io.in(roomJoined).emit('chatMessage',{
-                content: name + "  for 10.",
-                time: getTime(),
+                content: name + "  for " + points+".",
+                time: getFormattedTime(),
                 type: "notification"
             });
 
@@ -136,17 +138,19 @@ io.on('connection', (socket) => {
                     scoresID=scores.roomJoined.indexOf(x);
                 }
             }
-            scores.roomJoined[scoresID].value+=10;
+            scores.roomJoined[scoresID].value+=points;
         }
         else{
+            const points=((finishedQuestion) ? 0 : -5);
+
             io.in(roomJoined).emit('updateScore', {
-                name: name,
-                scoreChange: -5
+                player: name,
+                scoreChange: points
             });
 
             io.in(roomJoined).emit('chatMessage',{
-                content: name + " negs 5.",
-                time: getTime(),
+                content: name + ((finishedQuestion) ? ", no neg" : "negs 5"),
+                time: getFormattedTime(),
                 type: "notification"
             });
 
@@ -155,7 +159,7 @@ io.on('connection', (socket) => {
                     scoresID=scores.roomJoined.indexOf(x);
                 }
             }
-            scores.roomJoined[scoresID].value-=5;
+            scores.roomJoined[scoresID].value+=points;
         }
     });
 
@@ -191,7 +195,7 @@ function fetchNewQuestion(){
 }
 
 
-function getTime(){
+function getFormattedTime(){
     time = new Date();
     hours=time.getHours();
     minutes=time.getMinutes();
