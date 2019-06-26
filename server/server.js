@@ -3,6 +3,7 @@ const app = express();
 const http = require('http').Server(app);
 const io = require('Socket.io')(http)
 const path = require('path');
+const url = require('url');
 
 const clients=[];
 let correctAnswer='';
@@ -21,12 +22,9 @@ app.get('/',(req,res) => {
     res.sendFile(path.join(__dirname, + 'public/index.html'))
 });
 
-const nsp = io.of('/my-namespace');
-nsp.on('connection', function(socket){
-    console.log('does this work');
-  });
+
 function legalName(name){
-    for (scoreItem of scores){
+    for (scoreItem of scores.roomJoined){
         if (scoreItem.player==name){
             return(false);
         }
@@ -41,10 +39,15 @@ function getAverage(){
     return(total/currentPlaces.length);
 }
 io.on('connection', (socket) => {
+    let roomJoined=(url.parse(socket.handshake.headers.referer).query);
+    !('roomJoined' in clients) && (clients.roomJoined = []);
+    !('roomJoined' in scores) && (scores.roomJoined = []);
+
+    socket.join(roomJoined);
     if(currentQuestion==''){
         fetchNewQuestion();
     }
-    clients.push(socket.id);
+    clients.roomJoined.push(socket.id);
 
     let genNewName = "SCAT";
     let z = 1;
@@ -52,7 +55,7 @@ io.on('connection', (socket) => {
         genNewName="SCAT"+z;
         z+=1;
     }
-    scores.push(
+    scores.roomJoined.push(
         {
             player: genNewName,
             value: 0
@@ -60,14 +63,16 @@ io.on('connection', (socket) => {
     );
     socket.on('getStartingInfo',()=>{
         currentPlaces=[];
-        io.emit('getCurrentPlace');
+        io.in(roomJoined).emit('getCurrentPlace');
+        io.in(roomJoined).emit('addName',genNewName);
 
         setTimeout(()=>{
             const averagePlace = getAverage() ? getAverage() : 0;
             startWord = Math.floor(averagePlace/100);  //the 100 is the speed, probably should change it to a var
             delayTime = 100-averagePlace % 100;
-            io.to(clients[clients.length-1]).emit('startingInformation', {
-                scores: scores,
+            console.log("json " +JSON.stringify(scores));
+            io.to(socket.id).emit('startingInformation', {
+                scores: scores.roomJoined,
                 name: genNewName,
                 startWord: startWord,
                 delayTime: delayTime,
@@ -90,7 +95,7 @@ io.on('connection', (socket) => {
 
     socket.on('chatMessage', (message) => {
         message.time=getTime();
-        io.emit('chatMessage', message);
+        io.in(roomJoined).emit('chatMessage', message);
     });
 
     socket.on('buzz', (buzzInfo) => {
@@ -101,12 +106,12 @@ io.on('connection', (socket) => {
             buzzes.sort((a, b) => (a.timeSince > b.timeSince) ? 1 : -1)
             if(canBuzz&&buzzes[0].name==name){
                 canBuzz=false;
-                io.emit('chatMessage',{
+                io.in(roomJoined).emit('chatMessage',{
                     content: name + " buzzed",
                     time: getTime(),
                     type: "notification"
                 });
-                io.emit('buzz',name)        
+                io.in(roomJoined).emit('buzz',name)        
             }
         }, 50); //the 50 is how much time it waits, this should make it work if latency is under 50 milliseconds right now (also helps dealing with variance in setinterval)
     });
@@ -116,58 +121,62 @@ io.on('connection', (socket) => {
         const answer = answerInfo.answer;
  
         if (answer==correctAnswer){
-            io.emit('updateScore', {
+            io.in(roomJoined).emit('updateScore', {
                 player: name,
                 scoreChange: 10
             });
-            io.emit('chatMessage',{
+            io.in(roomJoined).emit('chatMessage',{
                 content: name + "  for 10.",
                 time: getTime(),
                 type: "notification"
             });
 
-            for (x of scores){
+            for (x of scores.roomJoined){
                 if (x.player==name){
-                    scoresID=scores.indexOf(x);
+                    scoresID=scores.roomJoined.indexOf(x);
                 }
             }
-            scores[scoresID].value+=10;
+            scores.roomJoined[scoresID].value+=10;
         }
         else{
-            io.emit('updateScore', {
+            io.in(roomJoined).emit('updateScore', {
                 name: name,
                 scoreChange: -5
             });
 
-            io.emit('chatMessage',{
+            io.in(roomJoined).emit('chatMessage',{
                 content: name + " negs 5.",
                 time: getTime(),
                 type: "notification"
             });
 
-            for (x of scores){
+            for (x of scores.roomJoined){
                 if (x.player==name){
-                    scoresID=scores.indexOf(x);
+                    scoresID=scores.roomJoined.indexOf(x);
                 }
             }
-            scores[scoresID].value-=5;
+            scores.roomJoined[scoresID].value-=5;
         }
     });
 
     socket.on('nextQuestion',()=>{
         canBuzz=true;
         time=new Date();
-        io.emit('nextQuestion',{
+        io.in(roomJoined).emit('nextQuestion',{
             questionText: fetchNewQuestion()
         });
     });
 
     socket.on('nameChange', (names) => {
-        for (x of scores){
+        for (x of scores.roomJoined){
             if (x.player==names.oldName){
                 x.player=names.newName;
             }
         }
+        io.in(roomJoined).emit('nameChange',{
+            newName: names.newName,
+            oldName: names.oldName
+        });
     });
 });
 
@@ -188,4 +197,3 @@ function getTime(){
     minutes=time.getMinutes();
     return("" + hours + ":" + (String(minutes).length==2 ? minutes:"0"+minutes));
 }
-
