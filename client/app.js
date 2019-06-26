@@ -45,8 +45,8 @@ socket.on('startingInformation', (startingInformation) => {
     else{
         //displayText = setInterval(nextWord, speed);
         setTimeout(function(){displayText = setInterval(nextWord, speed)},delay);
-        updateScores();
     }
+    updateScores();
 });
 
 socket.on('updateScore', (scoreChange)=> {
@@ -65,7 +65,6 @@ socket.on('updateScore', (scoreChange)=> {
 });
 
 window.onload = function startingInfo(){
-    console.log('loading');
     messages =[
     ];
     socket.emit('getStartingInfo');
@@ -106,7 +105,7 @@ function buzz(){
 
     socket.emit('buzz', {
         name:playerName,
-        timeSince: (words*speed+(((time.getHours()*60+time.getMinutes())*60+time.getSeconds())*1000+time.getMilliseconds())-lastWordTime)
+        timeSince: (words*speed+(((time.getHours()*60+time.getMinutes())*60+time.getSeconds())*1000+time.getMilliseconds())-lastWordTime),
     })
 }
 
@@ -209,7 +208,19 @@ document.getElementById('textChat').onkeydown = function(e){
         submitAnswer();
     }
  }; 
- 
+
+ socket.on('addName',(newName)=>{
+     scores.push({player: newName, value:0});
+     updateScores();
+ })
+ socket.on('nameChange',(names)=>{
+    for (x of scores){
+        if (x.player==names.oldName){
+            x.player=names.newName;
+        }
+    }
+    updateScores();
+ });
  //changes name on enter
  document.getElementById('name').onkeydown = function(e){
     if(e.keyCode == 13){
@@ -217,21 +228,11 @@ document.getElementById('textChat').onkeydown = function(e){
         playerName=document.getElementById('name').value;
 
         if (legalName(playerName) && playerName!=oldPlayerName){
-            let scoresID=0;
-            for (x of scores){ 
-                if (x.player==oldPlayerName){
-                    scoresID=scores.indexOf(x);
-                }
-            }
-            scores[scoresID].player=playerName;
-            
             socket.emit('nameChange',{
                 newName: playerName,
                 oldName: oldPlayerName
             });
-            updateScores();
         }
-
         else{
             if (playerName!=oldPlayerName){
                 window.alert("name taken");
