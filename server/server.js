@@ -152,7 +152,7 @@ io.on('connection', (socket) => {
         canBuzz=true;
         buzzes[roomJoined]=[];
 
-        //checks if the answer is write
+        //check if the answer is right --> eventually replace with some complicated function
         if (answer==correctAnswer){
             const points=((power) ? 15 : 10);
 
