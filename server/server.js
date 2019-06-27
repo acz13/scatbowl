@@ -120,6 +120,7 @@ io.on('connection', (socket) => {
 
     socket.on('buzz', (buzzInfo) => {
         const roomJoined=buzzInfo.room;
+        console.log(buzzes);
         buzzes[roomJoined].push(buzzInfo);
         const name = buzzInfo.name;
 
@@ -149,7 +150,7 @@ io.on('connection', (socket) => {
         const finishedQuestion = answerInfo.finishedQuestion;
         const power = answerInfo.power;
         canBuzz=true;
-        buzzes=[];
+        buzzes[roomJoined]=[];
 
         //checks if the answer is write
         if (answer==correctAnswer){
