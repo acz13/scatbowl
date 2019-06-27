@@ -89,7 +89,7 @@ socket.on('nextQuestion', (nextQuestion)=>{
     writingQuestion=true;
     finishedQuestion=false;
     words=0;
-    
+
     document.getElementById("buzzButton").disabled = false;
     document.getElementById("nextButton").disabled = false;
     document.getElementById("answer").style.visibility = "hidden";
@@ -183,7 +183,7 @@ function submitText(){
         content: document.getElementById('textChat').value,
         type: "chat"
     };
-    socket.emit('chatMessage', {message: message, room: roomJoined});
+    socket.emit('chatMessage', {message: message, room: roomName});
 }
 
 //goes through every message, converts it to html, and sets the chat 
