@@ -10,7 +10,7 @@ let correctAnswer='';
 const scores=[];
 let scoresID=0;
 
-let buzzes={};
+let buzzes=[];
 let currentPlaces=[];
 let canBuzz=true;
 let startWord;
@@ -29,16 +29,15 @@ io.on('connection', (socket) => {
         console.log('user disconnected');
     });
     roomJoined=(url.parse(socket.handshake.headers.referer).query);
-    console.log(roomJoined);
-    console.log(clients);
     socket.join(roomJoined);
+
+    //the short circuit form is still way nicer, but fine
     if (!(roomJoined in clients)) {
         clients[roomJoined] = [];
     };
     if (!(roomJoined in scores)) {
         scores[roomJoined] = [];
     }
-    console.log(clients);
     if(currentQuestion==''){
         fetchNewQuestion();
     }
@@ -46,7 +45,7 @@ io.on('connection', (socket) => {
 
     let genNewName = "SCAT";
     let z = 1;
-    while (!legalName(genNewName)){
+    while (!legalName({name: genNewName,room: roomJoined})){
         genNewName="SCAT"+z;
         z+=1;
     }
@@ -57,14 +56,14 @@ io.on('connection', (socket) => {
         }
     );
 
-    socket.on('getStartingInfo',()=>{
+    socket.on('getStartingInfo',(room)=>{
+        const roomJoined=room;
         currentPlaces[roomJoined] = [];
         io.in(roomJoined).emit('getCurrentPlace');
         io.in(roomJoined).emit('addName',genNewName);
 
         setTimeout(()=>{
-            console.log(scores);
-            const averagePlace = getAverage() ? getAverage() : 0;
+            const averagePlace = getAverage(roomJoined) ? getAverage(roomJoined) : 0;
             startWord = Math.floor(averagePlace/100);  //the 100 is the speed, probably should change it to a var
             delayTime = 100-averagePlace % 100;
             io.to(socket.id).emit('startingInformation', {
@@ -78,23 +77,33 @@ io.on('connection', (socket) => {
         },100); //this wait is also to account for latency
     });
 
-    socket.on('currentPlace', (currentPlace) => {
+    socket.on('currentPlace', (placeInfo) => {
+        const roomJoined=placeInfo.room;
+        const currentPlace=placeInfo.place;
+
         if(currentPlace!=null){ //because the client requesting will have nothing
             currentPlaces[roomJoined].push(currentPlace);
         }
     });
 
-    socket.on('chatMessage', (message) => {
+    socket.on('chatMessage', (messageInfo) => {
+        const roomJoined = messageInfo.room;
+        const message = messageInfo.message;
+
         message.time=getFormattedTime();
         io.in(roomJoined).emit('chatMessage', message);
     });
 
     socket.on('buzz', (buzzInfo) => {
-        buzzes.push(buzzInfo);
+        const roomJoined=buzzInfo.room;
+        if (!(roomJoined in buzzes)) {
+            buzzes[roomJoined] = [];
+        }
+        buzzes[roomJoined].push(buzzInfo);
         const name = buzzInfo.name;
         setTimeout(()=>{
-            buzzes.sort((a, b) => (a.timeSince > b.timeSince) ? 1 : -1)
-            if(canBuzz&&buzzes[0].name==name){
+            buzzes[roomJoined].sort((a, b) => (a.timeSince > b.timeSince) ? 1 : -1)
+            if(canBuzz&&buzzes[roomJoined][0].name==name){
                 canBuzz=false;
                 io.in(roomJoined).emit('chatMessage',{
                     content: name + " buzzed",
@@ -107,6 +116,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('submitAnswer', (answerInfo) => {
+        const roomJoined=answerInfo.room;
         const name = answerInfo.name;
         const answer = answerInfo.answer;
         const finishedQuestion = answerInfo.finishedQuestion;
@@ -141,7 +151,7 @@ io.on('connection', (socket) => {
             });
 
             io.in(roomJoined).emit('chatMessage',{
-                content: name + ((finishedQuestion) ? ", no neg" : "negs 5"),
+                content: name + ((finishedQuestion) ? ", no neg" : " negs 5"),
                 time: getFormattedTime(),
                 type: "notification"
             });
@@ -155,7 +165,9 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('nextQuestion',()=>{
+    socket.on('nextQuestion',(room)=>{
+        const roomJoined=room;
+
         canBuzz=true;
         time=new Date();
         io.in(roomJoined).emit('nextQuestion',{
@@ -164,6 +176,8 @@ io.on('connection', (socket) => {
     });
 
     socket.on('nameChange', (names) => {
+        const roomJoined=names.room;
+
         for (x of scores[roomJoined]){
             if (x.player==names.oldName){
                 x.player=names.newName;
@@ -194,7 +208,9 @@ function getFormattedTime(){
     return("" + hours + ":" + (String(minutes).length==2 ? minutes:"0"+minutes));
 }
 
-function legalName(name){
+function legalName(nameInfo){
+    const roomJoined=nameInfo.room;
+    const name=nameInfo.name;
     for (scoreItem of scores[roomJoined]){
         if (scoreItem.player==name){
             return(false);
@@ -202,7 +218,8 @@ function legalName(name){
     }
     return(true);
 }
-function getAverage(){
+function getAverage(room){
+    const roomJoined=room;
     let total=0;
     for(place of currentPlaces[roomJoined]){
         total+=place;
