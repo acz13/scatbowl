@@ -10,10 +10,11 @@ let finishedQuestion=false;
 let delay=0;
 let writingQuestion;
 
-
+let roomName='';
 
 window.onload = function startingInfo(){
-    socket.emit('getStartingInfo');
+    roomName = window.location.search.slice(1);
+    socket.emit('getStartingInfo',roomName);
 }
 
 socket.on('startingInformation', (startingInformation) => {
@@ -80,7 +81,7 @@ socket.on('updateScore', (scoreChange)=> {
 
 
 function nextQuestion(){
-    socket.emit('nextQuestion');
+    socket.emit('nextQuestion',roomName);
 }
 
 socket.on('nextQuestion', (nextQuestion)=>{
@@ -135,15 +136,16 @@ socket.on('buzz', (whoBuzzed) => {
 function buzz(){
     time=new Date();
     socket.emit('buzz', {
-        name:playerName,
+        name: playerName,
         timeSince: (words*speed+getTime()-lastWordTime),
+        room: roomName
     })
 }
 
 socket.on('getCurrentPlace',()=>{
     time = new Date();
     const place=(words*speed+getTime()-lastWordTime)
-    socket.emit('currentPlace',place);
+    socket.emit('currentPlace',{place: place,room: roomName});
 });
 
 socket.on('addName',(newName)=>{
@@ -165,7 +167,8 @@ function submitAnswer(){
         name: playerName, 
         answer: document.getElementById('answer').value.toLowerCase(),
         finishedQuestion: finishedQuestion,
-        power: !fullText.split(" ").splice(0,words).join(" ").includes("(*)") //This doesn't work with IE, so should probably just write a function, but I'm lazy rn
+        power: !fullText.split(" ").splice(0,words).join(" ").includes("(*)"), //This doesn't work with IE, so should probably just write a function, but I'm lazy rn -- point is to check if the power mark is in the written part of the question
+        room: roomName
     });
 }
 
@@ -175,7 +178,7 @@ function submitText(){
         content: document.getElementById('textChat').value,
         type: "chat"
     };
-    socket.emit('chatMessage', message);
+    socket.emit('chatMessage', {message: message,room: roomJoined});
 }
 
 function updateChat(){
@@ -217,7 +220,9 @@ document.getElementById('answer').onkeydown = function(e){
         if (legalName(playerName) && playerName!=oldPlayerName){
             socket.emit('nameChange',{
                 newName: playerName,
-                oldName: oldPlayerName
+                oldName: oldPlayerName,
+                room: roomName
+
             });
         }
         else{
