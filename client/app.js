@@ -8,7 +8,7 @@ const speed=100;
 var socket = io("http://127.0.0.1:3000/");
 let finishedQuestion=false;
 let delay=0;
-let writingQuestion;
+let writingQuestion; 
 
 let roomName='';
 
@@ -89,6 +89,7 @@ socket.on('nextQuestion', (nextQuestion)=>{
     writingQuestion=true;
     finishedQuestion=false;
     words=0;
+    
     document.getElementById("buzzButton").disabled = false;
     document.getElementById("nextButton").disabled = false;
     document.getElementById("answer").style.visibility = "hidden";
@@ -127,9 +128,12 @@ function nextWord(){
 socket.on('buzz', (whoBuzzed) => {
     document.getElementById("buzzButton").disabled = true;
     document.getElementById("nextButton").disabled = true;
+    
+    //displays the answer box if this was the client that buzzed
     if (whoBuzzed==playerName){
         document.getElementById("answer").style.visibility = "visible";
     }
+
     writingQuestion=false;
 });
 
@@ -154,6 +158,7 @@ socket.on('addName',(newName)=>{
 })
 
 socket.on('nameChange',(names)=>{
+    // finds the player in scores with the old name and changes it to the new name
    for (x of scores){
        if (x.player==names.oldName){
            x.player=names.newName;
@@ -178,9 +183,10 @@ function submitText(){
         content: document.getElementById('textChat').value,
         type: "chat"
     };
-    socket.emit('chatMessage', {message: message,room: roomJoined});
+    socket.emit('chatMessage', {message: message, room: roomJoined});
 }
 
+//goes through every message, converts it to html, and sets the chat 
 function updateChat(){
 	const messagesHTML = messages
 		.map(message => createMessageHTML(message))
@@ -188,13 +194,13 @@ function updateChat(){
     document.getElementById('chat').innerHTML = messagesHTML;
 }
 
+//goes through every scoreItem, converts it to html, and sets the scoreboard 
 function updateScores(){
 	const scoresHTML = scores
 		.map(score => createScoreHTML(score))
         .join('');
     document.getElementById('scoreboard').innerHTML = scoresHTML;
 }
-
 
  //Submits chats on enter
 document.getElementById('textChat').onkeydown = function(e){
