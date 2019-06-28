@@ -41,7 +41,7 @@ socket.on('startingInformation', (startingInformation) => {
 });
 
 socket.on('chatMessage', (message) => {
-    messages.push(message);
+    messages.unshift(message);
     updateChat();
 });
 
