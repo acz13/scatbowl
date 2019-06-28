@@ -6,7 +6,6 @@ const path = require('path');
 const url = require('url');
 
 const clients={};
-let correctAnswer='';
 const scores=[];
 const speed = 100; //currently this is separate on the server and client, should probably make it part of the room properties and send it over when the user connects
 let scoresID=0;
@@ -16,7 +15,7 @@ let currentPlaces=[];
 let canBuzz=true;
 let startWord;
 let delayTime;
-let currentQuestion='';
+let currentQuestions=[];
 let roomJoined='';
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -38,20 +37,14 @@ io.on('connection', (socket) => {
 
     //the short circuit form is still way nicer, but fine
 
+    
     //initializes the room property to all of the server information
     if (!(roomJoined in clients)) {
         clients[roomJoined] = [];
-    };
-    if (!(roomJoined in scores)) {
         scores[roomJoined] = [];
-    }
-    scores[roomJoined].push();
-
-    if (!(roomJoined in buzzes)) {
         buzzes[roomJoined] = [];
+        currentQuestions[roomJoined] = fetchNewQuestion();
     }
-
-    fetchNewQuestion();
 
 
     let genNewName = "SCAT";
@@ -84,7 +77,6 @@ io.on('connection', (socket) => {
         io.in(roomJoined).emit('addName',genNewName);
 
         setTimeout(()=>{
-            console.log()
             //gets the average of all values, if the room is empty, it will be null so it gets set to 0.
             const averagePlace = getAverage(roomJoined) ? getAverage(roomJoined) : 0;
             //calculates when+where to start the question
@@ -97,7 +89,7 @@ io.on('connection', (socket) => {
                 startWord: startWord,
                 delayTime: delayTime,
                 canBuzz: canBuzz,
-                question: currentQuestion
+                question: currentQuestions[roomJoined].question
             });
         },100); //this wait is to account for latency
     });
@@ -105,7 +97,6 @@ io.on('connection', (socket) => {
     socket.on('currentPlace', (placeInfo) => {
         const roomJoined=placeInfo.room;
         const currentPlace=placeInfo.place;
-        console.log(JSON.stringify(placeInfo));
         if(currentPlace!=null){ //because the client requesting will have nothing
             currentPlaces[roomJoined].push(currentPlace);
         }
@@ -154,7 +145,7 @@ io.on('connection', (socket) => {
         buzzes[roomJoined]=[];
 
         //checks if the answer is right
-        if (answer==correctAnswer){
+        if (answer==currentQuestions[roomJoined].answer){
             const points=((power) ? 15 : 10);
 
             //updates client side score
@@ -208,9 +199,10 @@ io.on('connection', (socket) => {
     socket.on('nextQuestion',(room)=>{
         const roomJoined=room;
         canBuzz=true;
+        currentQuestions[roomJoined] = fetchNewQuestion();
 
-        io.in(roomJoined).emit('nextQuestion',{
-            questionText: fetchNewQuestion()
+        io.in(roomJoined).emit('nextQuestion', {
+            questionText: currentQuestions[roomJoined].question
         });
     });
 
@@ -234,9 +226,9 @@ io.on('connection', (socket) => {
 
 //eventually this will be replaced with a function to search for the question
 function fetchNewQuestion(){
-    correctAnswer = 'energy';
-    currentQuestion="Because this quantity is conserved, perpetual motion machines of the first kind cannot exist. A capacitor stores this quantity in an electric field between its plates. The SI unit for this quantity is describes the work done when a force of one (*)) newton moves an object one meter. For ten points, name this physical quantity that is measured in Joules and comes in kinetic and potential forms.";
-    return(currentQuestion);
+    const genQuestion = "Because this quantity is conserved, perpetual motion machines of the first kind cannot exist. A capacitor stores this quantity in an electric field between its plates. The SI unit for this quantity is describes the work done when a force of one (*)) newton moves an object one meter. For ten points, name this physical quantity that is measured in Joules and comes in kinetic and potential forms.";
+    const genAnswer = 'energy';
+    return({question: genQuestion, answer: genAnswer});
 }
 
 function getFormattedTime(){
