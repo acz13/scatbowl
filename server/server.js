@@ -84,6 +84,7 @@ io.on('connection', (socket) => {
         io.in(roomJoined).emit('addName',genNewName);
 
         setTimeout(()=>{
+            console.log()
             //gets the average of all values, if the room is empty, it will be null so it gets set to 0.
             const averagePlace = getAverage(roomJoined) ? getAverage(roomJoined) : 0;
             //calculates when+where to start the question
@@ -98,13 +99,13 @@ io.on('connection', (socket) => {
                 canBuzz: canBuzz,
                 question: currentQuestion
             });
-        },50); //this wait is to account for latency
+        },100); //this wait is to account for latency
     });
 
     socket.on('currentPlace', (placeInfo) => {
         const roomJoined=placeInfo.room;
         const currentPlace=placeInfo.place;
-
+        console.log(JSON.stringify(placeInfo));
         if(currentPlace!=null){ //because the client requesting will have nothing
             currentPlaces[roomJoined].push(currentPlace);
         }
@@ -152,7 +153,7 @@ io.on('connection', (socket) => {
         canBuzz=true;
         buzzes[roomJoined]=[];
 
-        //check if the answer is right --> eventually replace with some complicated function
+        //checks if the answer is right
         if (answer==correctAnswer){
             const points=((power) ? 15 : 10);
 
