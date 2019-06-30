@@ -4,7 +4,7 @@ let scores=[];
 let words;
 let fullText='';
 let lastWordTime;
-const speed=100;
+let speed;
 var socket = io("http://127.0.0.1:3000/");
 let finishedQuestion=false;
 let delay=0;
@@ -19,6 +19,7 @@ window.onload = function startingInfo(){
 
 socket.on('startingInformation', (startingInformation) => {
     scores=startingInformation.scores;
+    speed=startingInformation.speed;
     playerName=startingInformation.name;
     words=startingInformation.startWord;
     delay=startingInformation.delayTime;
@@ -106,7 +107,7 @@ function nextWord(){
     //calculates whether or not it is time to display the next word, and how long to wait before the next word -- to account for variance in setTimeout
     wordsChange=(Math.floor((getTime()-lastWordTime)/speed));
     words+=wordsChange;
-    delay=(speed-((getTime()-lastWordTime)%100));
+    delay=(speed-((getTime()-lastWordTime)%speed));
     //if the next word was added, update when the lastWord was added
     if (wordsChange!=0){
         lastWordTime=getTime();
