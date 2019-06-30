@@ -85,12 +85,13 @@ io.on('connection', (socket) => {
             io.to(socket.id).emit('startingInformation', {
                 scores: getProperty(roomJoined, 'scores'),
                 name: genNewName,
-                startWord: startWord,
-                delayTime: delayTime,
                 canBuzz: getProperty(roomJoined, 'canBuzz'),
-                question: getProperty(roomJoined, 'currentQuestion')
+                question: getProperty(roomJoined, 'currentQuestion'),
+                speed: getProperty(roomJoined, 'speed'),
+                startWord: startWord,
+                delayTime: delayTime
             });
-        },10); //this wait is to account for latency
+        },100); //this wait is to account for latency
     });
 
     socket.on('currentPlace', (placeInfo) => {
