@@ -101,9 +101,6 @@ socket.on('nextQuestion', (nextQuestion)=>{
 
 
 function nextWord(){
-    const textToShow = fullText.split(" ").splice(0,words).join(" ");
-    const remainingText = fullText.split(" ").splice(words).join(" ");
-
     //calculates whether or not it is time to display the next word, and how long to wait before the next word -- to account for variance in setTimeout
     wordsChange=(Math.floor((getTime()-lastWordTime)/speed));
     words+=wordsChange;
@@ -113,6 +110,9 @@ function nextWord(){
         lastWordTime=getTime();
     }
 
+    const textToShow = fullText.split(" ").splice(0,words).join(" ");
+    const remainingText = fullText.split(" ").splice(words).join(" ");
+    
     questionShowing.innerHTML=textToShow;
     questionHidden.innerHTML=remainingText;
 
@@ -173,7 +173,7 @@ function submitAnswer(){
         name: playerName, 
         answer: document.getElementById('answer').value.toLowerCase(),
         finishedQuestion: finishedQuestion,
-        power: !fullText.split(" ").splice(0,words).join(" ").includes("(*)"), //This doesn't work with IE, so should probably just write a function, but I'm lazy rn -- point is to check if the power mark is in the written part of the question
+        displayedText: fullText.split(" ").splice(0,words).join(" "), //This doesn't work with IE, so should probably just write a function, but I'm lazy rn -- point is to check if the power mark is in the written part of the question
         room: roomName
     });
 }
