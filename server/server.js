@@ -532,35 +532,7 @@ function checkCorrect(submitted, actual, displayedText, questionText)
 			//check if every word in the submitted answer is in a prompt or correct answer
 			for (const submittedWord of submittedAnswer.split(" "))
 			{
-				toReturn = true;
-				acceptList.forEach((acceptAnswer) =>
-				{
-					acceptAnswer.split(" ").forEach((acceptWord) =>
-					{
-						if (distance(submittedWord, acceptWord,submittedAnswer.split(" ").length>1) > 0.85)
-						{
-							toReturn = false;
-						}
-					});
-				});
-				promptList.forEach((promptAnswer) =>
-				{
-					promptAnswer.split(" ").forEach((promptWord) =>
-					{
-						if (distance(submittedWord, promptWord) > 0.85)
-						{
-							toReturn = false;
-						}
-					});
-				});
-				fixAnswer(questionText).split(" ").splice(-15).forEach((questionWord) =>
-				{
-					if (distance(submittedWord, questionWord) > 0.85)
-					{
-						toReturn = false;
-					}
-				});
-
+				toReturn = wordInSomeCorrectAns(submittedWord,submittedAnswer,acceptList,promptList,questionText);
 
 				if (toReturn)
 				{
@@ -596,9 +568,8 @@ function checkCorrect(submitted, actual, displayedText, questionText)
 	{
 		return (whatToDo);
 	}
-
 	// else if the last word is the same, if it's a person then it's right, otherwise prompt
-	if (whatToDo == "" && submittedAnswer.split(" ").length < 1)
+	if (whatToDo == "" && (submittedAnswer.split(" ").length == 1 || submittedAnswer.split(" ").map((elem) => wordInSomeCorrectAns(elem,submittedAnswer, acceptList,promptList,questionText)).filter(elem => elem).length>1))
 	{
 		if (distance(submittedAnswer.split(" ").splice(-1)[0],boldedAnswer.split(" ").splice(-1)[0]) > 0.85)
 		{
@@ -606,7 +577,7 @@ function checkCorrect(submitted, actual, displayedText, questionText)
 			{
 				whatToDo = "correct";
 			}
-			else 
+			else if(!(questionText.includes("this book")||questionText.includes("this novel")||questionText.includes("this poem")||questionText.includes("this short story")||questionText.includes("this story"))) //prompt if last word is rightu unless it's a book because then it needs exact
 			{
 				whatToDo = "prompt"
 			}
@@ -626,6 +597,41 @@ function checkCorrect(submitted, actual, displayedText, questionText)
 	}
 	return (whatToDo);
 }
+
+
+function wordInSomeCorrectAns(submittedWord, submittedAnswer, acceptList, promptList, questionText){
+				let toReturn = true;
+				acceptList.forEach((acceptAnswer) =>
+				{
+					acceptAnswer.split(" ").forEach((acceptWord) =>
+					{
+						if (distance(submittedWord, acceptWord,submittedAnswer.split(" ").length>1) > 0.85)
+						{
+							toReturn = false;
+						}
+					});
+				});
+				promptList.forEach((promptAnswer) =>
+				{
+					promptAnswer.split(" ").forEach((promptWord) =>
+					{
+						if (distance(submittedWord, promptWord) > 0.85)
+						{
+							toReturn = false;
+						}
+					});
+				});
+				fixAnswer(questionText).split(" ").splice(-15).forEach((questionWord) =>
+				{
+					if (distance(submittedWord, questionWord) > 0.85)
+					{
+						toReturn = false;
+					}
+				});
+        
+        return(toReturn);
+}
+
 
 function setAnswerInfo(fullText, questionText)
 {
@@ -895,11 +901,11 @@ function distance(seq1,seq2,allowAbrev) {
 		return (0);
 	}
 
-	if (allowAbrev){
-		if (seq1.substring(0,1)==seq2 || seq2.substring(0,1)==seq1){
-			return(1);
-		}
-	}
+  if (allowAbrev){
+  	if (seq1.substring(0,1)==seq2 || seq2.substring(0,1)==seq1){
+    	return(1);
+    }
+  }
 
     let len1=seq1.length;
     let len2=seq2.length;
@@ -914,6 +920,7 @@ function distance(seq1,seq2,allowAbrev) {
         replace:function(c, d) { return charDist(c,d); }
     };
 
+    /* don't swap the sequences, or this is gonna be painful */
     if (len1 == 0 || len2 == 0) {
         dist = 0;
         while (len1)
@@ -1023,6 +1030,5 @@ function charDist(c1,c2){
   }
   catch (err){
   	return(1)
-  }  
-  
+  }    
 }
