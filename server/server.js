@@ -282,7 +282,7 @@ io.on('connection', (socket) =>
 function fetchNewQuestion()
 {
 	const genQuestion = "This work argues that raises in average wages have led luxury goods to be considered costumer “needs” in what is called the “dependence effect,” and it uses the term “social balance” to refer to the proper relationship between private and public spending. It advocates an increase in public spending in education to help foster a “new class” of workers who enjoy their jobs. Originally titled “Why the Poor are Poor,” this work forms a trilogy with its author's other books American Capitalism and The New Industrial State and introduces the term “conventional wisdom.” For 10 points, name this book reevaluating the American economy, by John Galbraith.";
-	const genAnswer = 'The Affluent Society';
+	const genAnswer = 'Henry the second';
 	const genCategory = 'Social Science';
 	return (
 	{
@@ -351,7 +351,7 @@ function getProperty(room, property)
 	}
 }
 
-function checkCorrect(submitted, actual, displayedText, questionText, category)
+function checkCorrect(submitted, actual, displayedText, questionText)
 {
 	let [promptList, noAcceptList, acceptList, boldedAnswer] = setAnswerInfo(actual);
 
@@ -360,12 +360,13 @@ function checkCorrect(submitted, actual, displayedText, questionText, category)
 
     //do preliminary tests -- allows for finding anomalies like "the invisible man" vs "invisible man", they're slightly less accurate but should be fine
     for (const noAcceptAnswer of noAcceptList){
-        if (distance(noAcceptAnswer,submitted)>0.9){
+        if (distance(submitted, noAcceptAnswer)>0.85){
             return("wrong");
         }
     }
+    
     for (const acceptAnswer of acceptList){
-        if (distance(acceptAnswer,submitted)>0.9){
+        if (distance(submitted, acceptAnswer)>0.85){
             return("correct");
 		}
 		// acronym checker
@@ -373,8 +374,9 @@ function checkCorrect(submitted, actual, displayedText, questionText, category)
             return("correct");
         }
     }
+    
     for (const promptAnswer of acceptList){
-        if (distance(promptAnswer,submitted)>0.9){
+        if (distance(submitted, promptAnswer)>0.85){
             return("prompt");
 		}
 		// acronym checker
@@ -397,7 +399,7 @@ function checkCorrect(submitted, actual, displayedText, questionText, category)
 			toReturn = true;
 			submittedAnswer.split(" ").forEach((submittedWord) =>
 			{
-				if (distance(wrongWord, submittedWord) > 0.87)
+				if (distance(submittedWord, wrongWord) > 0.85)
 				{
 					toReturn = false;
 				}
@@ -414,7 +416,7 @@ function checkCorrect(submitted, actual, displayedText, questionText, category)
 			toReturn = true;
 			noAcceptAnswer.split(" ").forEach((wrongWord) =>
 			{
-				if (distance(submittedWord, wrongWord) > 0.87)
+				if (distance(submittedWord, wrongWord) > 0.85)
 				{
 					toReturn = false;
 				}
@@ -426,7 +428,7 @@ function checkCorrect(submitted, actual, displayedText, questionText, category)
 				{
 					acceptAnswer.split(" ").forEach((acceptWord) =>
 					{
-						if (distance(submittedWord, acceptWord) > 0.87)
+						if (distance(submittedWord, acceptWord) > 0.85)
 						{
 							toReturn = false;
 						}
@@ -436,7 +438,7 @@ function checkCorrect(submitted, actual, displayedText, questionText, category)
 				{
 					promptAnswer.split(" ").forEach((promptWord) =>
 					{
-						if (distance(submittedWord, promptWord) > 0.87)
+						if (distance(submittedWord, promptWord) > 0.85)
 						{
 							toReturn = false;
 						}
@@ -474,7 +476,7 @@ function checkCorrect(submitted, actual, displayedText, questionText, category)
 				toReturn = true;
 				submittedAnswer.split(" ").forEach((submittedWord) =>
 				{
-					if (distance(promptWord, submittedWord) > 0.87)
+					if (distance(submittedWord, promptWord) > 0.85)
 					{
 						toReturn = false;
 					}
@@ -491,7 +493,7 @@ function checkCorrect(submitted, actual, displayedText, questionText, category)
 				toReturn = true;
 				promptAnswer.split(" ").forEach((promptWord) =>
 				{
-					if (distance(promptWord, submittedWord) > 0.87)
+					if (distance(submittedWord, promptWord) > 0.85)
 					{
 						toReturn = false;
 					}
@@ -535,7 +537,7 @@ function checkCorrect(submitted, actual, displayedText, questionText, category)
 				{
 					acceptAnswer.split(" ").forEach((acceptWord) =>
 					{
-						if (distance(submittedWord, acceptWord,submittedAnswer.split(" ").length>1) > 0.87)
+						if (distance(submittedWord, acceptWord,submittedAnswer.split(" ").length>1) > 0.85)
 						{
 							toReturn = false;
 						}
@@ -545,7 +547,7 @@ function checkCorrect(submitted, actual, displayedText, questionText, category)
 				{
 					promptAnswer.split(" ").forEach((promptWord) =>
 					{
-						if (distance(submittedWord, promptWord) > 0.87)
+						if (distance(submittedWord, promptWord) > 0.85)
 						{
 							toReturn = false;
 						}
@@ -553,7 +555,7 @@ function checkCorrect(submitted, actual, displayedText, questionText, category)
 				});
 				fixAnswer(questionText).split(" ").splice(-15).forEach((questionWord) =>
 				{
-					if (distance(submittedWord, questionWord) > 0.87)
+					if (distance(submittedWord, questionWord) > 0.85)
 					{
 						toReturn = false;
 					}
@@ -577,7 +579,7 @@ function checkCorrect(submitted, actual, displayedText, questionText, category)
 				toReturn = true;
 				submittedAnswer.split(" ").forEach((submittedWord) =>
 				{
-					if (distance(correctWord, submittedWord,submittedAnswer.split(" ").length>1) > 0.87)
+					if (distance(submittedWord, correctWord, submittedAnswer.split(" ").length>1) > 0.85)
 					{
 						toReturn = false;
 					}
@@ -590,7 +592,7 @@ function checkCorrect(submitted, actual, displayedText, questionText, category)
 			whatToDo = "correct";
 		}
 	}
-	if (whatToDo != null)
+	if (whatToDo != "")
 	{
 		return (whatToDo);
 	}
@@ -598,7 +600,7 @@ function checkCorrect(submitted, actual, displayedText, questionText, category)
 	// else if the last word is the same, if it's a person then it's right, otherwise prompt
 	if (whatToDo == "" && submittedAnswer.split(" ").length < 1)
 	{
-		if (distance(boldedAnswer.split(" ").splice(-1)[0], submittedAnswer.split(" ").splice(-1)[0]) > 0.87)
+		if (distance(submittedAnswer.split(" ").splice(-1)[0],boldedAnswer.split(" ").splice(-1)[0]) > 0.85)
 		{
 			if (questionText.includes("this person") || questionText.includes("this man") || questionText.includes("this woman") || questionText.includes("this author") || questionText.includes("this writer") || questionText.includes("this poet") || questionText.includes("this painter") || questionText.includes("this sculptor") || questionText.includes("this composer"))
 			{
@@ -813,14 +815,14 @@ function fixAnswer(answer, questionText)
 
 		for (let i = 0; i < ordinalNumbers.length; i++)
 		{
-			if (distance(answerWord, ordinalNumbers[i]) > 0.87)
+			if (distance(answerWord, ordinalNumbers[i]) > 0.85)
 			{
 				return (i.toString());
 			}
 		}
 		for (let i = 0; i < cardinalNumbers.length; i++)
 		{
-			if (distance(answerWord, cardinalNumbers[i]) > 0.87)
+			if (distance(answerWord, cardinalNumbers[i]) > 0.85)
 			{
 				return (i.toString());
 			}
@@ -882,98 +884,145 @@ function removeEndings(word)
 
 }
 
+function distance(seq1,seq2,allowAbrev) {
+	// s1 is submitted answer stuff, s2 is given stuff
 
-function distance(s1, s2, allowAbrev)
-{
 	// check if  numbers are the exact same because they normally have to be
-	let submittedNumb = !(s1.match(/\d/g)) ? "" : s1.match(/\d/g).join(""); //extract number
-	let correctNumb = !(s2.match(/\d/g)) ? "" : s2.match(/\d/g).join("");
+	let submittedNumb = !(seq1.match(/\d/g)) ? "" : seq1.match(/\d/g).join(""); //extract number
+	let correctNumb = !(seq2.match(/\d/g)) ? "" : seq2.match(/\d/g).join("");
 	if (submittedNumb != correctNumb)
 	{
 		return (0);
 	}
 
-    if (allowAbrev){
-        if (s1.substring(0,1)==s2 || s2.substring(0,1)==s1){
-            return(1)
+	if (allowAbrev){
+		if (seq1.substring(0,1)==seq2 || seq2.substring(0,1)==seq1){
+			return(1);
+		}
+	}
+
+    let len1=seq1.length;
+    let len2=seq2.length;
+    let i, j;
+    let dist;
+    let ic, dc, rc;
+    let last, old, column;
+
+    const weighter={
+        insert:function(c) { return 0.75; },
+        delete:function(c) { return 1.0; },
+        replace:function(c, d) { return charDist(c,d); }
+    };
+
+    if (len1 == 0 || len2 == 0) {
+        dist = 0;
+        while (len1)
+            dist += weighter.delete(seq1[--len1]);
+        while (len2)
+            dist += weighter.insert(seq2[--len2]);
+        return dist;
+    }
+
+    column = []; // malloc((len2 + 1) * sizeof(double));
+    //if (!column) return -1;
+
+    column[0] = 0;
+    for (j = 1; j <= len2; ++j)
+        column[j] = column[j - 1] + weighter.insert(seq2[j - 1]);
+
+    for (i = 1; i <= len1; ++i) {
+        last = column[0]; /* m[i-1][0] */
+        column[0] += weighter.delete(seq1[i - 1]); /* m[i][0] */
+        for (j = 1; j <= len2; ++j) {
+            old = column[j];
+            if (seq1[i - 1] == seq2[j - 1]) {
+                column[j] = last; /* m[i-1][j-1] */
+            } else {
+                ic = column[j - 1] + weighter.insert(seq2[j - 1]);      /* m[i][j-1] */
+                dc = column[j] + weighter.delete(seq1[i - 1]);          /* m[i-1][j] */
+                rc = last + weighter.replace(seq1[i - 1], seq2[j - 1]); /* m[i-1][j-1] */
+                column[j] = ic < dc ? ic : (dc < rc ? dc : rc);
+            }
+            last = old;
         }
     }
 
-	let m = 0;
+    dist = column[len2];
+    
+        for (let i=0;i<seq1.split("").length-2;i++){
+    	if((seq1.substring(i,i+1)==seq1.substring(i+1,i+2))){
+      	if (!seq2.includes(seq1.substring(i,i+2))){
+        	dist-=0.5;
+        }
+      }
+    }
+    for (let i=0;i<seq2.split("").length-2;i++){
+    	if((seq2.substring(i,i+1)==seq2.substring(i+1,i+2))){
+      	if (!seq1.includes(seq2.substring(i,i+2))){
+        	dist-=0.25;
+        }
+      }
+    }
+    
+    return (1-dist/(1.8*Math.min(seq1.length,seq2.length)));
+}
 
-	// Exit early if either are empty.
-	if (s1.length == 0 || s2.length == 0)
-	{
-		return 0;
-	}
 
-	// Exit early if they're an exact match.
-	if (s1 == s2)
-	{
-		return 1;
-	}
-
-	let range = (Math.floor(Math.max(s1.length, s2.length) / 2)) - 1,
-		s1Matches = new Array(s1.length),
-		s2Matches = new Array(s2.length);
-
-	for (i = 0; i < s1.length; i++)
-	{
-		let low = (i >= range) ? i - range : 0,
-			high = (i + range <= s2.length) ? (i + range) : (s2.length - 1);
-
-		for (j = low; j <= high; j++)
-		{
-			if (s1Matches[i] != true && s2Matches[j] != true && s1[i] == s2[j])
-			{
-				++m;
-				s1Matches[i] = s2Matches[j] = true;
-				break;
-			}
-		}
-	}
-
-	// Exit early if no matches were found.
-	if (m == 0)
-	{
-		return 0;
-	}
-
-	// Count the transpositions.
-	let k = n_trans = 0;
-
-	for (i = 0; i < s1.length; i++)
-	{
-		if (s1Matches[i] == true)
-		{
-			for (j = k; j < s2.length; j++)
-			{
-				if (s2Matches[j] == true)
-				{
-					k = j + 1;
-					break;
-				}
-			}
-
-			if (s1[i] != s2[j])
-			{
-				++n_trans;
-			}
-		}
-	}
-
-	let weight = (m / s1.length + m / s2.length + (m - (n_trans / 2)) / m) / 3,
-		l = 0,
-		p = 0.1;
-
-	if (weight > 0.7)
-	{
-		while (s1[l] == s2[l] && l < 4)
-		{
-			++l;
-		}
-
-		weight = weight + l * p * (1 - weight);
-	}
-	return (Math.min(s1.length,s2.length))*(weight)/(weight-0.5);
+function charDist(c1,c2){
+  keyboard = {
+  	1: [-1,0],
+    2: [-1,1],
+  	3: [-1,2],
+    4: [-1,3],
+  	5: [-1,4],
+    6: [-1,5],
+  	7: [-1,6],
+    8: [-1,7],
+  	9: [-1,8],
+    0: [-1,9],
+  	"-": [-1,10],
+    "+": [-1,11],
+    q: [0, 0],
+    w: [0, 1],
+    e: [0, 2],
+    r: [0, 3],
+    t: [0, 4],
+    y: [0, 5],
+    u: [0, 6],
+    i: [0, 7],
+    o: [0, 8],
+    p: [0, 9],
+    "[": [0, 10],
+    "]": [0, 11],
+    a: [1, 0],
+    s: [1, 1],
+    d: [1, 2],
+    f: [1, 3],
+    g: [1, 4],
+    h: [1, 5],
+    j: [1, 6],
+    k: [1, 7],
+    l: [1, 8],
+    ";": [0, 10],
+    "'": [0, 11], 
+    z: [2, 0],
+    x: [2, 1],
+    c: [2, 2],
+    v: [2, 3],
+    b: [2, 4],
+    n: [2, 5],
+    m: [2, 6],
+    ",": [2, 7],
+    ".": [2, 8]
+  }
+  try {
+    return(((Math.sqrt(
+    Math.abs(keyboard[c1][0]-keyboard[c2][0])+
+    Math.abs(keyboard[c1][1]-keyboard[c2][1])
+    ))<1.5)?0.35:1);
+  }
+  catch (err){
+  	return(1)
+  }  
+  
 }
