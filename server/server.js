@@ -351,287 +351,187 @@ function getProperty(room, property)
 	}
 }
 
-function checkCorrect(submitted, actual, displayedText, questionText)
-{
-	let [promptList, noAcceptList, acceptList, boldedAnswer] = setAnswerInfo(actual);
+function wordInAnswer(word, list, allowAbrev){
+	return(list.some(elem => {
+  	return(distance(word,elem,allowAbrev)>0.85);  
+  }));
+  
+}
 
-	displayedText=displayedText.toLowerCase();
+function checkCorrect(submitted, actual, displayedText, questionText){
+  let [promptList, noAcceptList, acceptList, boldedAnswer, mistakesPromptList, mistakesNoAcceptList, mistakesAcceptList] = setAnswerInfo(actual);
+  
+  //do preliminary tests -- allows for finding anomalies like "the invisible man" vs "invisible man", they're slightly less accurate but should be fine
+	const distances = [].concat(...[mistakesPromptList, mistakesNoAcceptList, mistakesAcceptList]).map(elem => distance(submitted, elem));
+  
+  let max = distances[0];
+  let maxIndex = 0;
+  for (let i = 1; i < distances.length; i++) {
+      if (distances[i] > max) {
+          maxIndex = i;
+          max = arr[i];
+      }
+  }
+  /* 
+  if there is an answer that is close figure out which type of answer it is and return that
+  */
+  if(max>0.85){
+  	if (maxIndex<mistakesPromptList.length){
+    	return ("prompt");
+    }
+    else if (maxIndex<mistakesPromptList.length+mistakesNoAcceptList.length){
+    	return("wrong")
+    }
+    else{
+    	return("correct")
+    }
+  }
+
+	displayedText=fixAnswer(displayedText).split(" ");
 	questionText=questionText.toLowerCase();
 
-    //do preliminary tests -- allows for finding anomalies like "the invisible man" vs "invisible man", they're slightly less accurate but should be fine
-    for (const noAcceptAnswer of noAcceptList){
-        if (distance(submitted, noAcceptAnswer)>0.85){
-            return("wrong");
-        }
-    }
-    
-    for (const acceptAnswer of acceptList){
-        if (distance(submitted, acceptAnswer)>0.85){
-            return("correct");
-		}
-		// acronym checker
-		if (acceptAnswer.split(" ").map((elem) => elem.substring(0,1)).join("")==submitted){
-            return("correct");
-        }
-    }
-    
-    for (const promptAnswer of acceptList){
-        if (distance(submitted, promptAnswer)>0.85){
-            return("prompt");
-		}
-		// acronym checker
-		if (promptAnswer.split(" ").map((elem) => elem.substring(0,1)).join("")==submitted){
-			return("correct");
-		}
-    }
-
-
-    let submittedAnswer = fixAnswer(submitted, questionText);
-
+	const allOkayWords = [].concat(...[promptList, acceptList,displayedText.slice(-15).map(elem => [elem])]).flat();
+  
+  const submittedAnswer = fixAnswer(submitted, questionText).split(" ");
+	
 	let whatToDo = "";
 	let toReturn;
 
-	loop1: for (const noAcceptAnswer of noAcceptList)
-	{
-		//check if every word in the wrong answer is in the submitted answer
-		for (const wrongWord of noAcceptAnswer.split(" "))
+	
+	//ANSWER INCORRECT CHECK
+  
+  //check if this is true for any answer that shouldn't be accepted
+    if (noAcceptList.some(noAcceptAnswer => {
+    	const allowAbrev=noAcceptAnswer.length>1;
+    	//check if every word from the wrong answer is in the submitted answer
+      return (
+        noAcceptAnswer.every(elem => {
+          return(wordInAnswer(elem,submittedAnswer, allowAbrev));
+        })
+        &&
+         //check if every word from the submitted answer is in the wrong answer
+        submittedAnswer.every(elem => {
+          return(wordInAnswer(elem, noAcceptAnswer, allowAbrev));
+        })
+      )
+    }))
+    {
+    	return("wrong");
+    }
+    
+    
+   //ANSWER PROMPT CHECK
+
+	//check if this is true for any answer that should be prompted
+  if (promptList.some(promptAnswer => {
+    const allowAbrev=promptAnswer.length>1;
+
+    const stillGood=isStillGood(promptAnswer,displayedText)
+    if (stillGood){
+      if(stillGood!=true){
+        promptAnswer=stillGood;
+      }
+    }
+    else{
+      return(false);
+    }
+
+    return (
+      //check if every word from the prompt answer is in the submitted answer
+      promptAnswer.every(elem => {
+        return(wordInAnswer(elem,submittedAnswer, allowAbrev));
+      })
+      &&
+       //check if every word from the submitted answer is in an okay answer
+      submittedAnswer.every(elem => {
+        return(wordInAnswer(elem, allOkayWords, allowAbrev));
+      })
+    )
+  }))
+  {
+    return("prompt");
+  }
+    
+   //ANSWER CORRECT CHECK
+  
+  let toPrompt=false;
+  //check if this is true for any answer that should be correct
+  if (acceptList.some(acceptAnswer => { 
+    const allowAbrev=acceptAnswer.length>1;
+    const stillGood=isStillGood(acceptAnswer,displayedText)
+    if (stillGood){
+      if(stillGood!=true){
+        acceptAnswer=stillGood;
+      }
+    }
+    else{
+      return(false);
+    }
+
+	if ( 
+      //check if every word from the submitted answer is in an okay answer
+      ((submittedAnswer.every(elem => {
+        return(wordInAnswer(elem, allOkayWords, allowAbrev));
+      }))) 
+
+      &&
+       //check if at least 2 words from the correct answer are in the submitted answer, or the correct answer is just 1 word
+      acceptAnswer.filter(elem => {
+        return(wordInAnswer(elem, submittedAnswer, allowAbrev));
+      }).length>(allowAbrev?1:0)
+    )
+    {
+    	return(true)
+    }
+
+    const lastWordSame=(distance(submittedAnswer.slice(-1)[0],acceptAnswer.slice(-1)[0],false));
+    //else if the last word is the same, if it's a person then it's right, otherwise prompt
+		if (lastWordSame > 0.85)
 		{
-			toReturn = true;
-			submittedAnswer.split(" ").forEach((submittedWord) =>
+			if (questionText.includes("this person") || questionText.includes("this man") || questionText.includes("this woman") || questionText.includes("this author") || questionText.includes("this writer") || questionText.includes("this poet") || questionText.includes("this painter") || questionText.includes("this sculptor") || questionText.includes("this pyhsicist") || questionText.includes("this composer"))
 			{
-				if (distance(submittedWord, wrongWord) > 0.85)
-				{
-					toReturn = false;
-				}
-			});
-			if (toReturn)
+				return(true);
+			}
+			else if(!(questionText.includes("this book")||questionText.includes("this novel")||questionText.includes("this poem")||questionText.includes("this short story")||questionText.includes("this story"))) //prompt if last word is right unless it's a book because then it needs exact
 			{
-				continue loop1;
+      	toPrompt=true;
+				return(false);
 			}
 		}
-
-		//check if every word in the submitted answer is in the wrong answer or not in a correct answer/prompt
-		for (const submittedWord of submittedAnswer.split(" "))
-		{
-			toReturn = true;
-			noAcceptAnswer.split(" ").forEach((wrongWord) =>
-			{
-				if (distance(submittedWord, wrongWord) > 0.85)
-				{
-					toReturn = false;
-				}
-			});
-			if (toReturn)
-			{
-				toReturn = true;
-				acceptList.forEach((acceptAnswer) =>
-				{
-					acceptAnswer.split(" ").forEach((acceptWord) =>
-					{
-						if (distance(submittedWord, acceptWord) > 0.85)
-						{
-							toReturn = false;
-						}
-					});
-				});
-				promptList.forEach((promptAnswer) =>
-				{
-					promptAnswer.split(" ").forEach((promptWord) =>
-					{
-						if (distance(submittedWord, promptWord) > 0.85)
-						{
-							toReturn = false;
-						}
-					});
-				});
-			}
-			if (toReturn)
-			{
-				continue loop1;
-			}
-		}
-		whatToDo = "wrong";
-	}
-
-	if (whatToDo == "")
-	{
-		loop1: for (let promptAnswer of promptList)
-		{
-			if (!(promptAnswer.includes("until") || promptAnswer.includes("before")))
-			{
-				//checks to see if any words from the supposed correct answer were already displayed (meaning the answer is no longer right)
-				if (!promptAnswer.replace(/before/g, '').replace(/until/g, '').trim().split(" ").some((elem) => (fixAnswer(displayedText)+" ").includes(" " + elem + " ") || fixAnswer(displayedText).includes(" " + elem + "<")))
-				{
-					promptAnswer = promptAnswer.substring(0, promptAnswer.includes("until") ? promptAnswer.indexOf('until') : promptAnswer.length).trim();
-					promptAnswer = promptAnswer.substring(0, promptAnswer.includes("before") ? promptAnswer.indexOf('before') : promptAnswer.length).trim();
-				}
-				else
-				{
-					continue loop1;
-				}
-			}
-			//check if every word in the prompt answer is in the submitted answer
-			for (const promptWord of promptAnswer.split(" "))
-			{
-				toReturn = true;
-				submittedAnswer.split(" ").forEach((submittedWord) =>
-				{
-					if (distance(submittedWord, promptWord) > 0.85)
-					{
-						toReturn = false;
-					}
-				});
-				if (toReturn)
-				{
-					continue loop1;
-				}
-			}
-
-			//check if every word in the submitted answer is in the prompt answer
-			for (const submittedWord of submittedAnswer.split(" "))
-			{
-				toReturn = true;
-				promptAnswer.split(" ").forEach((promptWord) =>
-				{
-					if (distance(submittedWord, promptWord) > 0.85)
-					{
-						toReturn = false;
-					}
-				});
-				if (toReturn)
-				{
-					continue loop1;
-				}
-			}
-			whatToDo = "prompt";
-		}
-	}
-
-	let toPrompt = false;
-	if (whatToDo == "")
-	{
-        loop1: for (let correctAnswer of acceptList)
-		{
-			if ((correctAnswer.includes("until") || correctAnswer.includes("before")))
-			{
-				//checks to see if any words from the supposed correct answer were already displayed (meaning the answer is no longer right)
-
-				if (!correctAnswer.replace(/before/g, '').replace(/until/g, '').trim().split(" ").filter((elem) => elem.trim() != "").some((elem) => (fixAnswer(displayedText)+" ").includes(" " + elem + " ") || fixAnswer(displayedText).includes(" " + elem + "<")))
-				{
-					correctAnswer = correctAnswer.substring(0, correctAnswer.includes("until") ? correctAnswer.indexOf('until') : correctAnswer.length).trim();
-					correctAnswer = correctAnswer.substring(0, correctAnswer.includes("before") ? correctAnswer.indexOf('before') : correctAnswer.length).trim();
-				}
-				else
-				{
-					continue loop1;
-				}
-			}
-
-			// if exact match, then the answer was right -- or the extra words in submitted are in a different correct answer or a prompt answer or in the last 15 words of a question (in case they give the author and work or something)
-
-			//check if every word in the submitted answer is in a prompt or correct answer
-			for (const submittedWord of submittedAnswer.split(" "))
-			{
-				toReturn = wordInSomeCorrectAns(submittedWord,submittedAnswer,acceptList,promptList,questionText);
-
-				if (toReturn)
-				{
-					continue loop1;
-				}
-			}
-
-			//if every word you submitted is in the right answer (or you wouldn't get this far) and you wrote at least two words, set it to prompt if not right
-            if (submittedAnswer.split(" ").length < 1){
-                toPrompt=true;
-            }
-
-			//check if every word in the correct answer is in the submitted answer
-			for (const correctWord of correctAnswer.split(" "))
-			{
-				toReturn = true;
-				submittedAnswer.split(" ").forEach((submittedWord) =>
-				{
-					if (distance(submittedWord, correctWord, submittedAnswer.split(" ").length>1) > 0.85)
-					{
-						toReturn = false;
-					}
-                });
-				if (toReturn)
-				{
-					continue loop1;
-				}
-			}
-			whatToDo = "correct";
-		}
-	}
-	if (whatToDo != "")
-	{
-		return (whatToDo);
-	}
-	// else if the last word is the same, if it's a person then it's right, otherwise prompt
-	if (whatToDo == "" && (submittedAnswer.split(" ").length == 1 || submittedAnswer.split(" ").map((elem) => wordInSomeCorrectAns(elem,submittedAnswer, acceptList,promptList,questionText)).filter(elem => elem).length>1))
-	{
-		if (distance(submittedAnswer.split(" ").splice(-1)[0],boldedAnswer.split(" ").splice(-1)[0]) > 0.85)
-		{
-			if (questionText.includes("this person") || questionText.includes("this man") || questionText.includes("this woman") || questionText.includes("this author") || questionText.includes("this writer") || questionText.includes("this poet") || questionText.includes("this painter") || questionText.includes("this sculptor") || questionText.includes("this composer"))
-			{
-				whatToDo = "correct";
-			}
-			else if(!(questionText.includes("this book")||questionText.includes("this novel")||questionText.includes("this poem")||questionText.includes("this short story")||questionText.includes("this story"))) //prompt if last word is rightu unless it's a book because then it needs exact
-			{
-				whatToDo = "prompt"
-			}
-		}
-	}
-
-	if (whatToDo == "")
-	{
-		if (toPrompt)
-		{
-			whatToDo = "prompt";
-		}
-		else
-		{
-			whatToDo = "wrong";
-		}
-	}
-	return (whatToDo);
+    else{
+    	return false;
+    }
+  }))
+  {
+		return("correct")
+  }
+  else if(toPrompt){
+      return("prompt");
+  }
+  else{
+      return("wrong")
+  }
 }
-
-
-function wordInSomeCorrectAns(submittedWord, submittedAnswer, acceptList, promptList, questionText){
-				let toReturn = true;
-				acceptList.forEach((acceptAnswer) =>
-				{
-					acceptAnswer.split(" ").forEach((acceptWord) =>
-					{
-						if (distance(submittedWord, acceptWord,submittedAnswer.split(" ").length>1) > 0.85)
-						{
-							toReturn = false;
-						}
-					});
-				});
-				promptList.forEach((promptAnswer) =>
-				{
-					promptAnswer.split(" ").forEach((promptWord) =>
-					{
-						if (distance(submittedWord, promptWord) > 0.85)
-						{
-							toReturn = false;
-						}
-					});
-				});
-				fixAnswer(questionText).split(" ").splice(-15).forEach((questionWord) =>
-				{
-					if (distance(submittedWord, questionWord) > 0.85)
-					{
-						toReturn = false;
-					}
-				});
-        
-        return(toReturn);
+  
+function isStillGood(answer,text){
+  //if the answer can only be accepted at some time
+  if ((answer.includes("until") || answer.includes("before")))
+  {
+  	const index = answer.indexOf("before")>-1?answer.indexOf("before"):answer.indexOf("until");				     //sees if the words to buzz before exist in the displayedText
+    if (!answer.slice(index,1).some((elem) => text.includes(elem)))
+    {
+      // removes all the packet junk after "before" or "accept"
+      return(answer.slice(index, answer.length));
+    }
+    else{
+      // answer can't be accepted at this point in the question
+      return(false);
+    }
+  }
+  else{
+  	return(true);
+  }
 }
-
 
 function setAnswerInfo(fullText, questionText)
 {
@@ -640,36 +540,33 @@ function setAnswerInfo(fullText, questionText)
 	let incorrectAnswers = [];
 	let promptAnswers = [];
 
-    fullText=fullText.toLowerCase();
+  fullText=fullText.toLowerCase();
 
 	let bolded = fullText.replace(/ *\[[^\]]*]/g, ''); //removes text between []
-	bolded = bolded.replace(/\s*\(.*?\)\s*/g, '') //removes text between ()
+	bolded = bolded.replace(/\s*\(.*?\)\s*/g, ''); //removes text between ()
 	bolded = bolded.replace(/(\{.*?\})/g, ''); //removes text between {}
 
 	if (bolded.includes("/"))
 	{
-		bolded.split("/").forEach((elem) => correctAnswers.push(fixAnswer(elem, questionText)));
+		bolded.split("/").forEach((elem) => correctAnswers.push(fixAnswer(elem, questionText).split(" ")));
 	}
 	if (bolded.includes(" or "))
 	{
-		bolded.split(" or ").forEach((elem) => correctAnswers.push(fixAnswer(elem, questionText)));
-    }
+		bolded.split(" or ").forEach((elem) => correctAnswers.push(fixAnswer(elem, questionText).split(" ")));
+  }
+  if (bolded.includes("-"))
+	{
+		bolded.split("-").forEach((elem) => correctAnswers.push(fixAnswer(elem, questionText).split(" ")));
+  }
 
 	//if there is bolded text then that becomes the bolded text
 	bolded = (/<b>(.*?)<\/b>/.exec(bolded) != null ? /<b>(.*?)<\/b>/.exec(bolded)[1] : bolded)
 	bolded = bolded.replace(/(<.*?\>)/g, ''); //removes text between <>
 	bolded = bolded.replace(/(<.*?\>)/g, ''); //removes text between < and >  which occurs sometimes instead of <>
 
-	[incorrectAnswersPush, promptAnswersPush, correctAnswersPush] = commonAnswerMistakes(bolded);
-	incorrectAnswersPush.forEach((tempAnswer) => incorrectAnswers.push(tempAnswer));
-	correctAnswersPush.forEach((tempAnswer) => correctAnswers.push(tempAnswer));
-    promptAnswersPush.forEach((tempAnswer) => promptAnswers.push(tempAnswer));
+	let [mistakesIncorrectAnswers, mistakesPromptAnswers, mistakesCorrectAnswers] = commonAnswerMistakes(bolded);
 
-	//to allow for acronym testing
-
-    correctAnswers.push(bolded);
-
-	correctAnswers.push(fixAnswer(bolded, questionText));
+	correctAnswers.push(fixAnswer(bolded, questionText).split(" "));
 
 
 	fullText = fullText.replace(/\[/g, "(").replace(/\]/g, ")"); // replace brackets with parentheses to make later things easier
@@ -684,33 +581,34 @@ function setAnswerInfo(fullText, questionText)
 		return (elem != "");
 	});
 
-	let temptTxt;
+	let tempTxt=[];
 	for (let i = 0; i < fullText.length; i++)
 	{
 		if (fullText[i] != "accept" && fullText[i] != "prompt")
 		{
 			//split on "," , "or" , and ";", trim every element, then remove blanks
-			tempTxt = fullText[i].split(/,| or |;|\//).map((elem) => elem.trim()).filter((elem) =>
+      let wordsMinusDash=[];
+			tempTxt = fullText[i].split(/,| or |;|\//).map((elem) => {if(elem.includes("-")){wordsMinusDash.push(elem.replace("-"," "))};return(elem.trim())}).filter((elem) =>
 			{
 				//if it's empty, remove it
 				return (elem != "");
 			});
+      wordsMinusDash.forEach(elem => tempTxt.push(elem));
 
 			if (fullText[i - 1] == "accept")
 			{
-				if (fullText[i - 2] != null ? fullText[i - 2].split(" ").splice(-1)[0] == "not" : false)
-                { // if it is wrong
-                    tempTxt.forEach((elem) => incorrectAnswers.push(fixAnswer(elem, questionText).trim()));
-                    tempTxt.forEach((elem) => incorrectAnswers.push(elem).trim());
+				if (fullText[i - 2] != null ? fullText[i - 2].split(" ").slice(-1)[0] == "not" : false)
+        { // if it is wrong
+        	tempTxt.forEach((elem) => incorrectAnswers.push(fixAnswer(elem, questionText).trim().split()));
 				}
 				else
 				{
-					tempTxt.forEach((elem) => correctAnswers.push(fixAnswer(elem, questionText).trim()));
+					tempTxt.forEach((elem) => correctAnswers.push(fixAnswer(elem, questionText).trim().split(" ")));
 				}
 			}
 			else
 			{
-				tempTxt.forEach((elem) => promptAnswers.push(fixAnswer(elem, questionText).trim()));
+				tempTxt.forEach((elem) => promptAnswers.push(fixAnswer(elem, questionText).trim().split(" ")));
 			}
 		}
 	}
@@ -729,7 +627,7 @@ function setAnswerInfo(fullText, questionText)
 		return (elem != "");
 	});
 
-	return [promptAnswers, incorrectAnswers, correctAnswers, bolded];
+	return [promptAnswers, incorrectAnswers, correctAnswers, bolded, mistakesPromptAnswers, mistakesIncorrectAnswers, mistakesCorrectAnswers];
 }
 
 function commonAnswerMistakes(answer)
@@ -763,11 +661,11 @@ function fixAnswer(answer, questionText)
 	answer = answer.toLowerCase();
 
 	//remove grammar
-    answer=answer.replace(/[^A-Za-z0-9\s]/g,'');
+  answer=answer.replace(/[^A-Za-z0-9\s]/g,'');
 
 	let answerWords = answer.split(" ");
 	//general stop words -- make sure i isn't included
-	const stopWords = ["answers","required",'king', 'queen', "unless", "type", "word", "forms", "equivalent", "more", "this", "anything", "related", "name", "which", "includes", "any", "underlined", "bolded", "portion", "partial", "answer", "it", "it's", "its","they","them","a","their","what","mention", "mentioned", "who", "which", "this", "that", "grudgingly", "begrudgingly", "involving", 'am', 'is', 'are', 'was', 'were', 'be', 'been', "specific", "specifics", "has", "have", "had", "do", "does","did",'a',"an","but","if","or",'as','because', "specifically", "etc", "afterwards", "force", "de", "la", "el", 'of', 'at', 'by', 'for', 'with', 'about', 'during', 'after','to','in','on','now','then','once','there','when','why','how','all','any','both','more','other','most','suuch','as','no','not','only','same','some','so','can',"don't","will","just","should"];
+	const stopWords = ["like", "law", "experiment", "answers","required",'king', 'queen', "unless", "type", "word", "forms", "equivalent", "more", "this", "anything", "related", "name", "which", "includes", "any", "underlined", "bolded", "portion", "partial", "answer", "it", "it's", "its","they","them","a","their","what","mention", "mentioned", "who", "which", "that", "grudgingly", "begrudgingly", "involving", 'am', 'is', 'are', 'was', 'were', 'be', 'been', "specific", "specifics", "has", "have", "had", "do", "does","did",'a',"an","but","if","or",'as','because', "specifically", "etc", "afterwards", "force", "de", "la", "el", 'of', 'at', 'by', 'for', 'theory', 'with', 'about', 'during', 'after','to','in','on','now','then','once','there','when','why','how','all','any','both','more','other','otherwise','most','suuch','as','no','not','only','same','some','so','can',"don't","will","just","should","the", "no.","no","number","vitamin","vitamins","effect"];
 	//remove stop words
 	if (answerWords.length - 1 > 0) //check to make sure it's not some weird question with a stop word as the answers
 	{ 
@@ -891,7 +789,23 @@ function removeEndings(word)
 }
 
 function distance(seq1,seq2,allowAbrev) {
+
 	// s1 is submitted answer stuff, s2 is given stuff
+  if (allowAbrev){
+  	if (seq1.substring(0,1)==seq2 || seq2.substring(0,1)==seq1){
+    	return(1);
+    }
+  }
+
+	//some short circuit stuff for efficiency
+  if (seq1==seq2){
+  	return 1
+  }
+  if (Math.abs(seq1.length-seq2.length)>2){
+  	return 0
+  }
+
+
 
 	// check if  numbers are the exact same because they normally have to be
 	let submittedNumb = !(seq1.match(/\d/g)) ? "" : seq1.match(/\d/g).join(""); //extract number
@@ -901,11 +815,7 @@ function distance(seq1,seq2,allowAbrev) {
 		return (0);
 	}
 
-  if (allowAbrev){
-  	if (seq1.substring(0,1)==seq2 || seq2.substring(0,1)==seq1){
-    	return(1);
-    }
-  }
+
 
     let len1=seq1.length;
     let len2=seq2.length;
@@ -915,12 +825,11 @@ function distance(seq1,seq2,allowAbrev) {
     let last, old, column;
 
     const weighter={
-        insert:function(c) { return 0.75; },
-        delete:function(c) { return 1.0; },
+        insert:function(c) { return insertDeleteLetterCalc(c); },
+        delete:function(c) { return insertDeleteLetterCalc(c); },
         replace:function(c, d) { return charDist(c,d); }
     };
 
-    /* don't swap the sequences, or this is gonna be painful */
     if (len1 == 0 || len2 == 0) {
         dist = 0;
         while (len1)
@@ -930,8 +839,7 @@ function distance(seq1,seq2,allowAbrev) {
         return dist;
     }
 
-    column = []; // malloc((len2 + 1) * sizeof(double));
-    //if (!column) return -1;
+    column = []; 
 
     column[0] = 0;
     for (j = 1; j <= len2; ++j)
@@ -956,7 +864,8 @@ function distance(seq1,seq2,allowAbrev) {
 
     dist = column[len2];
     
-        for (let i=0;i<seq1.split("").length-2;i++){
+    //if chars are swapped then reduce score
+    for (let i=0;i<seq1.split("").length-2;i++){
     	if((seq1.substring(i,i+1)==seq1.substring(i+1,i+2))){
       	if (!seq2.includes(seq1.substring(i,i+2))){
         	dist-=0.5;
@@ -970,8 +879,16 @@ function distance(seq1,seq2,allowAbrev) {
         }
       }
     }
-    
-    return (1-dist/(1.8*Math.min(seq1.length,seq2.length)));
+    return (1-dist/(1.6*(0.5+Math.min(seq1.length,seq2.length))));
+}
+
+function insertDeleteLetterCalc(char){
+	if (char==' '){
+  	return(1.5)
+  }
+  else{
+  	return(1);
+  }
 }
 
 
@@ -1023,12 +940,14 @@ function charDist(c1,c2){
     ".": [2, 8]
   }
   try {
-    return(((Math.sqrt(
+    return(((Math.sqrt(Math.abs(keyboard[c1][0]-keyboard[c2][0])+Math.abs(keyboard[c1][1]-keyboard[c2][1])))<1.5)
+    	?0.4:
+      (((Math.sqrt(
     Math.abs(keyboard[c1][0]-keyboard[c2][0])+
     Math.abs(keyboard[c1][1]-keyboard[c2][1])
-    ))<1.5)?0.35:1);
+    )<2)?0.75:1.5)));
   }
   catch (err){
-  	return(1)
-  }    
+  	return(1.5)
+  }   
 }
