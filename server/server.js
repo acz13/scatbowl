@@ -360,7 +360,6 @@ function wordInAnswer(word, list, allowAbrev){
 
 function checkCorrect(submitted, actual, displayedText, questionText){
   let [promptList, noAcceptList, acceptList, boldedAnswer, mistakesPromptList, mistakesNoAcceptList, mistakesAcceptList] = setAnswerInfo(actual);
-  
   //do preliminary tests -- allows for finding anomalies like "the invisible man" vs "invisible man", they're slightly less accurate but should be fine
 	const distances = [].concat(...[mistakesPromptList, mistakesNoAcceptList, mistakesAcceptList]).map(elem => distance(submitted, elem));
   
@@ -388,9 +387,10 @@ function checkCorrect(submitted, actual, displayedText, questionText){
   }
 
 	displayedText=fixAnswer(displayedText).split(" ");
+  //displayedText=displayedText.split(" ");
 	questionText=questionText.toLowerCase();
 
-	const allOkayWords = [].concat(...[promptList, acceptList,displayedText.slice(-15).map(elem => [elem])]).flat();
+	const allOkayWords = [].concat(...[promptList, acceptList,displayedText.slice(-15).map(elem => [fixAnswer(elem)])]).flat();
   
   const submittedAnswer = fixAnswer(submitted, questionText).split(" ");
 	
@@ -453,7 +453,8 @@ function checkCorrect(submitted, actual, displayedText, questionText){
   }
     
    //ANSWER CORRECT CHECK
-  
+    //console.log(acceptList);
+
   let toPrompt=false;
   //check if this is true for any answer that should be correct
   if (acceptList.some(acceptAnswer => { 
@@ -467,8 +468,7 @@ function checkCorrect(submitted, actual, displayedText, questionText){
     else{
       return(false);
     }
-
-	if ( 
+	if (
       //check if every word from the submitted answer is in an okay answer
       ((submittedAnswer.every(elem => {
         return(wordInAnswer(elem, allOkayWords, allowAbrev));
@@ -483,7 +483,6 @@ function checkCorrect(submitted, actual, displayedText, questionText){
     {
     	return(true)
     }
-
     const lastWordSame=(distance(submittedAnswer.slice(-1)[0],acceptAnswer.slice(-1)[0],false));
     //else if the last word is the same, if it's a person then it's right, otherwise prompt
 		if (lastWordSame > 0.85)
@@ -517,8 +516,10 @@ function isStillGood(answer,text){
   //if the answer can only be accepted at some time
   if ((answer.includes("until") || answer.includes("before")))
   {
+  	console.log("here");
   	const index = answer.indexOf("before")>-1?answer.indexOf("before"):answer.indexOf("until");				     //sees if the words to buzz before exist in the displayedText
-    if (!answer.slice(index,1).some((elem) => text.includes(elem)))
+    const textJoined=text.join(" ");
+    if (!answer.slice(index,1).some((elem) => textJoined.includes(elem)))
     {
       // removes all the packet junk after "before" or "accept"
       return(answer.slice(index, answer.length));
@@ -556,7 +557,7 @@ function setAnswerInfo(fullText, questionText)
   }
   if (bolded.includes("-"))
 	{
-		bolded.split("-").forEach((elem) => correctAnswers.push(fixAnswer(elem, questionText).split(" ")));
+		correctAnswers.push(fixAnswer(bolded.replace("-"," "), questionText).split(" "));
   }
 
 	//if there is bolded text then that becomes the bolded text
@@ -588,11 +589,12 @@ function setAnswerInfo(fullText, questionText)
 		{
 			//split on "," , "or" , and ";", trim every element, then remove blanks
       let wordsMinusDash=[];
-			tempTxt = fullText[i].split(/,| or |;|\//).map((elem) => {if(elem.includes("-")){wordsMinusDash.push(elem.replace("-"," "))};return(elem.trim())}).filter((elem) =>
+			tempTxt = (" "+fullText[i]).split(/,| or |;|\//).map((elem) => {if(elem.includes("-")){wordsMinusDash.push(elem.replace(/-/g," "))}return(elem.trim())}).filter((elem) =>
 			{
 				//if it's empty, remove it
 				return (elem != "");
 			});
+
       wordsMinusDash.forEach(elem => tempTxt.push(elem));
 
 			if (fullText[i - 1] == "accept")
