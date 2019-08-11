@@ -1,9 +1,13 @@
 
 const express = require('express')
+const http = require('http')
+const history = require('connect-history-api-fallback')
+
 const session = require('express-session')
 const RedisStore = require('connect-redis')(session);
 const sessionStore = new RedisStore({ url: process.env.REDIS_URL })
-const http = require('http')
+
+const querystring = require('querystring')
 
 const app = express()
 const server = http.Server(app)
@@ -39,31 +43,17 @@ app.use(flash())
 app.use(passport.initialize())
 app.use(passport.session())
 
-// ROUTES
-app.get('/', function(req, res) {
-  if (req.isAuthenticated()) {
-    res.json(req.user)
-  } else {
-    res.status(404).send("Not found")
-  }
+app.use('/auth', require('./routes/auth'))
+
+// SOCKET.IO
+io.on('connection', function (socket) {
+  socket.emit('userinfo', socket.request.user)
+
+  socket.on('message', function (message) {
+    socket.emit('message', message)
+  })
 })
 
-// AUTH ROUTES (separate into another file)
-app.get('/auth/google', passport.authenticate('google', { scope: ['email', 'profile'], failureFlash: true }))
-app.get('/auth/guest', passport.authenticate('guest', { failureFlash: true }), function(req, res) {
-  res.redirect('/')
-})
-
-app.get('/auth/redirect/google',
-  passport.authenticate('google', { failureRedirect: '/', failureFlash: true }),
-  function (req, res) {
-    res.redirect('/')
-  }
-)
-
-app.get('/auth/logout', function(req, res) {
-  req.logout()
-  res.redirect('/')
-})
+app.use(history())
 
 server.listen(process.env.PORT, process.env.IP)
