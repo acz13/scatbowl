@@ -392,7 +392,7 @@ function checkCorrect(submitted, actual, displayedText, questionText){
 
 	const allOkayWords = [].concat(...[promptList, acceptList,displayedText.slice(-15).map(elem => [fixAnswer(elem)])]).flat();
   
-  const submittedAnswer = fixAnswer(submitted, questionText).split(" ");
+  	const submittedAnswer = fixAnswer(submitted, questionText).split(" ");
 	
 	let whatToDo = "";
 	let toReturn;
@@ -803,13 +803,12 @@ function distance(seq1,seq2,allowAbrev) {
   if (seq1==seq2){
   	return 1
   }
+
   if (Math.abs(seq1.length-seq2.length)>2){
   	return 0
   }
 
-
-
-	// check if  numbers are the exact same because they normally have to be
+	// check if numbers are the exact same because they normally have to be
 	let submittedNumb = !(seq1.match(/\d/g)) ? "" : seq1.match(/\d/g).join(""); //extract number
 	let correctNumb = !(seq2.match(/\d/g)) ? "" : seq2.match(/\d/g).join("");
 	if (submittedNumb != correctNumb)
@@ -819,8 +818,8 @@ function distance(seq1,seq2,allowAbrev) {
 
 
 
-    let len1=seq1.length;
-    let len2=seq2.length;
+    const len1=seq1.length;
+    const len2=seq2.length;
     let i, j;
     let dist;
     let ic, dc, rc;
@@ -866,21 +865,7 @@ function distance(seq1,seq2,allowAbrev) {
 
     dist = column[len2];
     
-    //if chars are swapped then reduce score
-    for (let i=0;i<seq1.split("").length-2;i++){
-    	if((seq1.substring(i,i+1)==seq1.substring(i+1,i+2))){
-      	if (!seq2.includes(seq1.substring(i,i+2))){
-        	dist-=0.5;
-        }
-      }
-    }
-    for (let i=0;i<seq2.split("").length-2;i++){
-    	if((seq2.substring(i,i+1)==seq2.substring(i+1,i+2))){
-      	if (!seq1.includes(seq2.substring(i,i+2))){
-        	dist-=0.25;
-        }
-      }
-    }
+
     return (1-dist/(1.6*(0.5+Math.min(seq1.length,seq2.length))));
 }
 
@@ -953,3 +938,11 @@ function charDist(c1,c2){
   	return(1.5)
   }   
 }
+
+Object.defineProperty(Array.prototype, 'flat', {
+    value: function(depth = 1) {
+      return this.reduce(function (flat, toFlatten) {
+        return flat.concat((Array.isArray(toFlatten) && (depth>1)) ? toFlatten.flat(depth-1) : toFlatten);
+      }, []);
+    }
+});
