@@ -1,14 +1,13 @@
 const router = require('express').Router()
-const passport = require("./config/passport")
+const passport = require('../config/passport')
 
-// AUTH ROUTES (separate into another file)
-function authOrRedirect(method, options) {
+function authOrRedirect (method, options) {
   return function (req, res, next) {
     passport.authenticate(method, { failureRedirect: '/', ...options }, function (err, user, { redirect, message }) {
       if (err) { return next(err) }
 
       if (message) {
-        req.flash("message", message)
+        req.flash('message', message)
       }
 
       if (redirect) {
@@ -18,7 +17,7 @@ function authOrRedirect(method, options) {
       req.login(user, function (err) {
         if (err) { return next(err) }
 
-        return res.json({...req.user, messages: req.flash("message")})
+        return res.json({ ...req.user, messages: req.flash('message') })
         // return res.redirect
       })
     })(req, res, next)
@@ -38,4 +37,4 @@ router.get('/logout', function (req, res) {
   res.redirect('/')
 })
 
-module.exports = router 
+module.exports = router

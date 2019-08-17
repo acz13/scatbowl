@@ -36,6 +36,7 @@
     "util-promisifyall": "^1.0.6"
   },
   "devDependencies": {
-    "@slonik/migrator": "^0.1.13"
+    "@slonik/migrator": "^0.1.13",
+    "standard": "^13.1.0"
   }
 }

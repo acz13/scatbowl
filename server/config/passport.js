@@ -1,14 +1,10 @@
 const passport = require('passport')
-const LocalStrategy = require('passport-local')
-const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 const CustomStrategy = require('passport-custom')
 const bcrypt = require('bcrypt')
 
-const redis = require("../db/redis")
-const pool = require("../db/pool")
-const { sql, UniqueIntegrityConstraintViolationError } = require("slonik")
+const redis = require('../db/redis')
 
-const randomGuestID = require("../util/randomGuestID")
+const randomGuestID = require('../util/randomGuestID')
 
 passport.serializeUser(async (user, cb) => {
   cb(null, { id: user.id, username: user.username, isGuest: !!user.isGuest })
@@ -18,9 +14,15 @@ passport.deserializeUser(async (obj, cb) => {
   cb(null, obj)
 })
 
-passport.use('local-login', new LocalStrategy({
-  passReqToCallback: true
-},
+if (process.env.NODE_ENV !== 'test') {
+  const pool = require('../db/pool')
+  const { sql, UniqueIntegrityConstraintViolationError } = require('slonik')
+  const LocalStrategy = require('passport-local')
+  const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy
+
+  passport.use('local-login', new LocalStrategy({
+    passReqToCallback: true
+  },
   async function (req, username, password, cb) {
     try {
       const user = await pool.maybeOne(sql`
@@ -42,11 +44,11 @@ passport.use('local-login', new LocalStrategy({
       return cb(err)
     }
   }
-))
+  ))
 
-passport.use('local-signup', new LocalStrategy({
-  passReqToCallback: true
-},
+  passport.use('local-signup', new LocalStrategy({
+    passReqToCallback: true
+  },
   function (req, username, password, cb) {
     pool.connect(async (connection) => {
       try {
@@ -77,28 +79,28 @@ passport.use('local-signup', new LocalStrategy({
       }
     })
   }
-))
+  ))
 
-passport.use(new GoogleStrategy({
-  clientID: process.env['GOOGLE_CLIENT_ID'],
-  clientSecret: process.env['GOOGLE_CLIENT_SECRET'],
-  callbackURL: '/auth/redirect/google',
-  proxy: true,
-  passReqToCallback: true
-},
+  passport.use(new GoogleStrategy({
+    clientID: process.env['GOOGLE_CLIENT_ID'],
+    clientSecret: process.env['GOOGLE_CLIENT_SECRET'],
+    callbackURL: '/auth/redirect/google',
+    proxy: true,
+    passReqToCallback: true
+  },
   async function (req, accessToken, refreshToken, profile, cb) {
     pool.connect(async (connection) => {
       try {
         if (req.isAuthenticated()) { // User is already logged in, link Google account if we can
-          let existingID = await connection.maybeOneFirst(sql`
+          const existingID = await connection.maybeOneFirst(sql`
             SELECT google_id FROM users
             WHERE id = ${req.user.id}
           `)
 
           if (existingID) {
-            return cb(null, false, { message: "Google account already linked." })
+            return cb(null, false, { message: 'Google account already linked.' })
           } else {
-            let user = await connection.one(sql`
+            const user = await connection.one(sql`
               UPDATE users SET google_id = ${profile.id}
               WHERE id = ${req.user.id}
               RETURNING id, username
@@ -109,7 +111,7 @@ passport.use(new GoogleStrategy({
 
         // User is not yet logged in
         // Try to find existing Google account
-        let user = await connection.maybeOne(sql`
+        const user = await connection.maybeOne(sql`
           SELECT id, username FROM users
           WHERE google_id = ${profile.id}
         `)
@@ -120,35 +122,34 @@ passport.use(new GoogleStrategy({
         }
 
         // User not found
-        let email = profile.emails[0].value
-        let existingID = await connection.maybeOneFirst(sql`
+        const email = profile.emails[0].value
+        const existingID = await connection.maybeOneFirst(sql`
           SELECT id FROM users
           WHERE lower(email) = lower(${email})
         `)
 
         if (existingID) { // Existing user found
-          return cb(null, false, { message: "Existing user with same email found, please sign in and link accounts" })
+          return cb(null, false, { message: 'Existing user with same email found, please sign in and link accounts' })
         }
-
-
       } catch (err) {
         cb(err)
       }
     })
   }
-))
+  ))
+}
 
 passport.use('guest', new CustomStrategy(
   async function (req, cb) {
     try {
       let id = await randomGuestID(4)
-      while (await redis.sismemberAsync("guest_names", id)) { // Loop until unused guest name is found
+      while (await redis.sismemberAsync('guest_names', id)) { // Loop until unused guest name is found
         id = await randomGuestID(4)
       }
 
-      await redis.saddAsync("guest_names", id)
+      await redis.saddAsync('guest_names', id)
 
-      cb(null, { id: id, username: "guest" + id, isGuest: true });
+      cb(null, { id: id, username: 'guest' + id, isGuest: true })
     } catch (err) {
       cb(err)
     }
