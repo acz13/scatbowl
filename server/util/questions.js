@@ -90,10 +90,12 @@ function fetchQuestionsFromQuizDB ({
   })
   return fetch(`https://www.quizdb.org/api/${searchEndpoint}?${searchQueryString}`)
     .then(
-      response => response.json(),
-      error => console.log('QuizDB: an error occurred.', error)
-    ).then(json => fixIDs(json.data.tossups))
-     .catch(err => console.log(err))
+      response => response.json()
+    ).then(
+      json => fixIDs(json.data.tossups)
+    ).catch(
+      err => console.log(err)
+    )
 }
 
 function fixIDs (questions) {
