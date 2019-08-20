@@ -9,8 +9,9 @@ const checkCorrect = require('../shared/answerChecking')
 // is ideal or we should just return promises with objects from everything
 class Game { // Move to this client side eventually
   // TODO: Eventually a lot of this could be moved to redis if we want to scale
-  constructor (settings, { fetchRandomTossup, fetchRandomBonus }, emit) {
+  constructor (settings, { fetchRandomTossup, fetchRandomBonus, fetchQuestionsFromQuizDB }, emit) {
     this.currentQuestion = null
+    this.questionQueue = null
     this.startTime = null
 
     this.isPaused = false
@@ -29,6 +30,7 @@ class Game { // Move to this client side eventually
 
     this.fetchRandomTossup = fetchRandomTossup
     this.fetchRandomBonus = fetchRandomBonus
+    this.fetchQuestionsFromQuizDB = fetchQuestionsFromQuizDB
   }
 
   resetQuestion () {
@@ -82,6 +84,9 @@ class Game { // Move to this client side eventually
   }
 
   changeSettings (player, newSettings) {
+    // Validate new settings and determine if we need to clear the queue
+    this.questionQueue = null
+
     this.settings = Object.assign({}, this.settings, newSettings)
 
     this.emit('changeSettings', { player: player.id, newSettings: this.settings })
@@ -175,16 +180,25 @@ class Game { // Move to this client side eventually
 
     this.resetQuestion()
 
-    let newQuestion
-
-    try {
-      newQuestion = await this.fetchRandomTossup()
-    } catch (err) {
-      return // Add in a Guru Meditation Bowl thing later
+    if (!this.questionQueue || this.questionQueue.length === 0) {
+      try {
+        this.questionQueue = await this.fetchQuestionsFromQuizDB({
+          searchQuery: this.settings.searchQuery,
+          searchFilters: {
+            difficulty: this.settings.difficulty,
+            subcategory: this.settings.subcategory,
+            category: this.settings.category
+          }
+        })
+        console.log("Fetched " + this.questionQueue.length + " questions")
+      } catch (err) {
+        player.emit('serverError', err.toString())
+        return // Add in a Guru Meditation Bowl thing later
+      }
     }
 
-    this.currentQuestion = newQuestion
-    this.emit('nextQuestion', { player: player.id, question: newQuestion })
+    this.currentQuestion = this.questionQueue.pop()
+    this.emit('nextQuestion', { player: player.id, question: this.currentQuestion })
     this.startTime = Date.now()
   }
 }

@@ -13,10 +13,13 @@ module.exports = Object.freeze({
     // userid: level
   },
 
+  allowResetAllAccessLevel: 2,
   allowNextAccessLevel: 0,
   allowSkipAccessLevel: 2,
   allowPauseAccessLevel: 2,
   allowSettingsAccessLevel: 2,
+
+  allowMultipleBuzzes: false,
 
   onlyAllowTeams: false,
 
@@ -25,9 +28,11 @@ module.exports = Object.freeze({
   maxPromptLevel: null, // number of times someone can be prompted before neg; null = no lomit
 
   textDelay: 150, // in milliseconds
-  difficulties: [3, 4, 5], // [] is all difficulties
-  categories: [], // [] is all categories
-  subcategories: [] // [] is all subcategories
+
+  searchQuery: "",
+  difficulty: ["regular_high_school", "hard_high_school", "national_high_school"], // [] is all difficulties
+  category: [], // [] is all categories
+  subcategory: [] // [] is all subcategories
 
   // TODO: category weighting
 })
