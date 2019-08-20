@@ -2,7 +2,7 @@
   "name": "scatbowl-server",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "server-new.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -40,5 +40,10 @@
   "devDependencies": {
     "@slonik/migrator": "^0.1.13",
     "standard": "^13.1.0"
+  },
+  "standard": {
+    "ignore": [
+      "server.js"
+    ]
   }
 }

@@ -1,8 +1,10 @@
 const { setupSlonikMigrator } = require('@slonik/migrator')
 const pool = require('./db/pool')
 
+const path = require('path')
+
 const migrator = setupSlonikMigrator({
-  migrationsPath: __dirname + '/db/migrations',
+  migrationsPath: path.join(__dirname, '/db/migrations'),
   pool,
   mainModule: module
 })

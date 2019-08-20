@@ -3,7 +3,7 @@ const passport = require('../config/passport')
 
 function authOrRedirect (method, options) {
   return function (req, res, next) {
-    passport.authenticate(method, { failureRedirect: '/', successRedirect: "/", ...options }, function (err, user, { redirect, message } = {}) {
+    passport.authenticate(method, { failureRedirect: '/', successRedirect: '/', ...options }, function (err, user, { redirect, message } = {}) {
       if (err) { return next(err) }
 
       if (message) {
@@ -17,7 +17,7 @@ function authOrRedirect (method, options) {
       req.login(user, function (err) {
         if (err) { return next(err) }
 
-        return res.redirect(options.successRedirect || "/")
+        return res.redirect(options.successRedirect || '/')
         // return res.json({ ...req.user, messages: req.flash('message') })
         // return res.redirect
       })
@@ -31,7 +31,7 @@ router.post('/login', authOrRedirect('local-login'))
 router.get('/google', passport.authenticate('google', { scope: ['email', 'profile'] }))
 router.get('/redirect/google', authOrRedirect('google'))
 
-router.get('/guest', authOrRedirect('guest', { failureFlash: true}))
+router.get('/guest', authOrRedirect('guest', { failureFlash: true }))
 
 router.get('/logout', function (req, res) {
   req.logout()

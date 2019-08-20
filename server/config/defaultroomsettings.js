@@ -1,6 +1,4 @@
 module.exports = Object.freeze({
-  gameMode: 'infinite', // currently unused, may implement set matches in the future
-
   // USERLEVELS
   // -1: banned (UNUSED)
   // 0: guests
@@ -13,26 +11,30 @@ module.exports = Object.freeze({
     // userid: level
   },
 
-  allowResetAllAccessLevel: 2,
-  allowNextAccessLevel: 0,
-  allowSkipAccessLevel: 2,
-  allowPauseAccessLevel: 2,
-  allowSettingsAccessLevel: 2,
+  settings: {
+    gameMode: 'infinite', // currently unused, may implement set matches in the future
 
-  allowMultipleBuzzes: false,
+    allowResetAllAccessLevel: 2,
+    allowNextAccessLevel: 0,
+    allowSkipAccessLevel: 2,
+    allowPauseAccessLevel: 2,
+    allowSettingsAccessLevel: 2,
 
-  onlyAllowTeams: false,
+    allowMultipleBuzzes: false,
 
-  manualAnswerCheckingEnabled: false,
-  manualAnswerCheckingLevel: 2,
-  maxPromptLevel: null, // number of times someone can be prompted before neg; null = no lomit
+    onlyAllowTeams: false,
 
-  textDelay: 150, // in milliseconds
+    manualAnswerCheckingEnabled: false,
+    manualAnswerCheckingLevel: 2,
+    maxPromptLevel: null, // number of times someone can be prompted before neg; null = no lomit
 
-  searchQuery: "",
-  difficulty: ["regular_high_school", "hard_high_school", "national_high_school"], // [] is all difficulties
-  category: [], // [] is all categories
-  subcategory: [] // [] is all subcategories
+    textDelay: 150, // in milliseconds
 
-  // TODO: category weighting
+    searchQuery: '',
+    difficulty: ['regular_high_school', 'hard_high_school', 'national_high_school'], // [] is all difficulties
+    category: [], // [] is all categories
+    subcategory: [] // [] is all subcategories
+
+    // TODO: category weighting
+  }
 })

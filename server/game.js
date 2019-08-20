@@ -9,7 +9,11 @@ const checkCorrect = require('../shared/answerChecking')
 // is ideal or we should just return promises with objects from everything
 class Game { // Move to this client side eventually
   // TODO: Eventually a lot of this could be moved to redis if we want to scale
-  constructor (settings, { fetchRandomTossup, fetchRandomBonus, fetchQuestionsFromQuizDB }, emit) {
+  constructor (
+    { settings, userlevels },
+    { fetchRandomTossup, fetchRandomBonus, fetchQuestionsFromQuizDB },
+    emit
+  ) {
     this.currentQuestion = null
     this.questionQueue = null
     this.startTime = null
@@ -190,7 +194,7 @@ class Game { // Move to this client side eventually
             category: this.settings.category
           }
         })
-        console.log("Fetched " + this.questionQueue.length + " questions")
+        console.log('Fetched ' + this.questionQueue.length + ' questions')
       } catch (err) {
         player.emit('serverError', err.toString())
         return // Add in a Guru Meditation Bowl thing later
