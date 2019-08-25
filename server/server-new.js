@@ -66,7 +66,7 @@ io.on('connection', function (socket) {
 
     if (!Object.prototype.hasOwnProperty.call(gameRooms, room)) {
       // TODO: get from db
-      gameRooms[room] = game.createSocketGame(io, room, null, id)
+      gameRooms[room] = game.createSocketGame(io, room, {}, {}, id)
     }
 
     socket.emit('gameInfo', gameRooms[room].addPlayer(socket.request.user))

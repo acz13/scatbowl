@@ -1,8 +1,9 @@
-const defaultRoomSettings = JSON.stringify(require('./config/defaultroomsettings'))
+const schemas = require('./config/schemas')
 // const pool = require('./db/pool')
 // const { sql } = require('slonik')
 // const redis = require('./db/redis')
-const questionManager = require('./util/questions')
+const quizDBQuestionManager = require('./util/quizDBQuestions')
+const dbQuestionManager = require('./util/dbQuestions')
 const checkCorrect = require('../shared/answerChecking')
 
 // The `Game` class is socket-independent... not sure if the bound emit method
@@ -10,8 +11,9 @@ const checkCorrect = require('../shared/answerChecking')
 class Game { // Move to this client side eventually
   // TODO: Eventually a lot of this could be moved to redis if we want to scale
   constructor (
-    { settings, userlevels },
-    { fetchRandomTossup, fetchRandomBonus, fetchQuestionsFromQuizDB },
+    settings,
+    userlevels,
+    questionManager,
     emit
   ) {
     this.currentQuestion = null
@@ -32,9 +34,7 @@ class Game { // Move to this client side eventually
 
     this.emit = emit
 
-    this.fetchRandomTossup = fetchRandomTossup
-    this.fetchRandomBonus = fetchRandomBonus
-    this.fetchQuestionsFromQuizDB = fetchQuestionsFromQuizDB
+    this.questionManager = questionManager
   }
 
   resetQuestion () {
@@ -66,7 +66,7 @@ class Game { // Move to this client side eventually
     this.emit('userJoin', user)
 
     if (!Object.prototype.hasOwnProperty.call(this.players, user.id)) {
-      this.players[user.id] = Object.assign({}, user, { score: 0, team: null })
+      this.players[user.id] = Object.assign({}, user, { team: null })
     }
 
     this.emit('updatePlayer',
@@ -80,7 +80,7 @@ class Game { // Move to this client side eventually
 
   chat (player, message) {
     if (this.players[player.id].level <= 0) {
-      player.emit('error', 'Permission denied')
+      player.emit('gameError', 'Permission denied')
       return
     }
 
@@ -89,9 +89,15 @@ class Game { // Move to this client side eventually
 
   changeSettings (player, newSettings) {
     // Validate new settings and determine if we need to clear the queue
-    this.questionQueue = null
+    const { error, value: settings } = schemas.settings.validate(Object.assign({}, this.settings, newSettings))
 
-    this.settings = Object.assign({}, this.settings, newSettings)
+    if (error) {
+      player.emit('gameError', `Bad settings ${error}`)
+      return
+    }
+
+    this.questionQueue = null
+    this.settings = settings
 
     this.emit('changeSettings', { player: player.id, newSettings: this.settings })
   }
@@ -186,7 +192,7 @@ class Game { // Move to this client side eventually
 
     if (!this.questionQueue || this.questionQueue.length === 0) {
       try {
-        this.questionQueue = await this.fetchQuestionsFromQuizDB({
+        this.questionQueue = await this.questionManager.fetchRandomTossups({
           searchQuery: this.settings.searchQuery,
           searchFilters: {
             difficulty: this.settings.difficulty,
@@ -207,16 +213,24 @@ class Game { // Move to this client side eventually
   }
 }
 
-function createSocketGame (io, name, settings, creator) {
-  if (!settings) {
-    settings = JSON.parse(defaultRoomSettings)
+function createSocketGame (io, name, settings, userLevels, creator) {
+  const { error: settingsError, value: fullSettings } = schemas.settings.validate(settings)
+
+  if (settingsError) {
+    throw settingsError
   }
 
   if (creator) {
-    settings.userlevels[creator] = 2 // Make the creator a moderator
+    userLevels[creator] = { level: fullSettings.defaultCreatorLevel }
   }
 
-  return new Game(settings, questionManager, (eventName, ...args) => {
+  const { error: userLevelsError, value: fullUserLevels } = schemas.userLevels.validate(userLevels)
+
+  if (userLevelsError) {
+    throw userLevelsError
+  }
+
+  return new Game(fullSettings, fullUserLevels, quizDBQuestionManager, (eventName, ...args) => {
     io.to(name).emit(eventName, ...args)
   })
 }
