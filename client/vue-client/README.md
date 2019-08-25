@@ -1,4 +1,4 @@
-# scatbowl-client
+# scatbowl
 
 ## Project setup
 ```
