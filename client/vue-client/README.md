@@ -1,4 +1,4 @@
-# scatbowl
+# vue-client
 
 ## Project setup
 ```
