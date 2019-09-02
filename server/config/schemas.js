@@ -21,7 +21,7 @@ const userLevel = Joi.object({
 })
 
 const userLevels = Joi.object().pattern(
-  Joi.alternatives().try(Joi.string(), Joi.number()),
+  userID,
   userLevel
 )
 
