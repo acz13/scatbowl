@@ -66,7 +66,7 @@ class Game { // Move to this client side eventually
     this.emit('userJoin', user)
 
     if (!Object.prototype.hasOwnProperty.call(this.players, user.id)) {
-      this.players[user.id] = Object.assign({}, user, { team: null })
+      this.players[user.id] = Object.assign({}, user, { team: null, powers: 0, gets: 0, negs: 0 })
     }
 
     this.emit('updatePlayer',
@@ -140,16 +140,27 @@ class Game { // Move to this client side eventually
 
     // const displayedText (Should we calculate this server side?)
     const displayedText = ''
-    const power = false
+    let power = false
     const result = checkCorrect(answer, this.currentQuestion.answer, displayedText, this.currentQuestion.text /*, this.currentQuestion.category */)
 
     this.emit('answer', { answer: answer, result: result })
 
-    if (result === 'correct' || result === 'wrong') {
+    if (result === 'correct') {
       this.resetQuestion()
 
-      const points = result === 'wrong' ? -5 : (power ? 15 : 10)
-      this.players[player.id].score += points
+      if (power) {
+        this.players[player.id].powers++
+      } else {
+        this.players[player.id].gets++
+      }
+
+      this.emit('updatePlayer',
+        {
+          player: player.id,
+          data: this.players[player.id]
+        })
+    } else if (result === 'wrong') {
+      this.players[player.id].negs++
 
       this.emit('updatePlayer',
         {
@@ -157,7 +168,8 @@ class Game { // Move to this client side eventually
           data: this.players[player.id]
         })
     } else if (result === 'prompt' /* Handle Prompts Later */) {
-      this.resetQuestion()
+      this.promptLevel++
+      this.emit('prompt', { answer: answer, promptLevel: this.promptLevel })
     }
   }
 
