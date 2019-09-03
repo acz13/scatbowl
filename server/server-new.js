@@ -43,6 +43,24 @@ app.use(history())
 
 const gameRooms = {}
 
+function joinRoom(socket, room) {
+  if (socket.roomName) {
+    socket.gameRoom.leave(socket.userID)
+    socket.leave(socket.roomName)
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(gameRooms, room)) {
+    // TODO: get from db
+    gameRooms[room] = game.createSocketGame(io, room, {}, {}, socket.userID)
+  }
+
+  console.log(socket.id)
+  socket.emit('gameInfo', gameRooms[room].addPlayer(socket.request.user, socket.id))
+  socket.gameRoom = gameRooms[room]
+  console.log("joined " + room)
+  socket.join(room)
+}
+
 // SOCKET.IO
 io.use(passportSocketIo.authorize({
   key: 'express.session',
@@ -52,26 +70,19 @@ io.use(passportSocketIo.authorize({
 
 io.on('connection', function (socket) {
   socket.emit('login', socket.request.user)
-  const id = socket.request.user.id
+  socket.userID = socket.request.user.id
 
   const player = {
-    id: id,
+    id: socket.userID,
     emit: (eventName, ...args) => {
       socket.emit(eventName, ...args)
     }
   }
 
   if (socket.handshake.query.room) {
-    const room = socket.handshake.query.room
+    joinRoom(socket, socket.handshake.query.room)
 
-    if (!Object.prototype.hasOwnProperty.call(gameRooms, room)) {
-      // TODO: get from db
-      gameRooms[room] = game.createSocketGame(io, room, {}, {}, id)
-    }
-
-    socket.emit('gameInfo', gameRooms[room].addPlayer(socket.request.user))
-    socket.gameRoom = gameRooms[room]
-    socket.join(room)
+    socket.roomName = socket.handshake.query.room  
   }
 
   socket.on('getGameInfo', () => {
@@ -79,7 +90,7 @@ io.on('connection', function (socket) {
   })
 
   socket.on('chat', message => {
-    socket.gameRoom.emit('chat', { user: id, message: message })
+    socket.gameRoom.chat(player, message)
   })
 
   socket.on('changeSettings', newSettings => {
@@ -100,6 +111,14 @@ io.on('connection', function (socket) {
 
   socket.on('nextQuestion', () => {
     socket.gameRoom.nextQuestion(player)
+  })
+
+  socket.on('disconnect', () => {
+    socket.gameRoom.leave(socket.userID)
+  })
+
+  socket.on('leave', () => {
+    socket.gameRoom.leave(socket.userID)
   })
 })
 

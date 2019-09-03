@@ -4,7 +4,10 @@
   "description": "",
   "main": "server-new.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node -r dotenv/config server-new.js",
+    "lint": "standard",
+    "lintfix": "standard --fix",
+    "watch": "nodemon --exec npm start"
   },
   "repository": {
     "type": "git",
@@ -34,6 +37,7 @@
     "passport-local": "^1.0.0",
     "passport.socketio": "^3.7.0",
     "qs": "^6.8.0",
+    "sanitize-html": "^1.20.1",
     "slonik": "^18.3.0",
     "socket.io": "^2.2.0",
     "util-promisifyall": "^1.0.6"
