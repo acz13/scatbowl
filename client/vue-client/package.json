@@ -30,5 +30,8 @@
     "sass-loader": "^7.1.0",
     "vue-cli-plugin-buefy": "^0.3.7",
     "vue-template-compiler": "^2.6.10"
+  },
+  "gitHooks": {
+    "pre-commit": "foo"
   }
 }

@@ -1,2 +1,6 @@
 image:
   file: .gitpod.dockerfile
+
+vscode:
+  extensions:
+    - octref.vetur@0.22.2:KOvI2Xa9VX4Lga8ukQxS2A==

@@ -25,54 +25,54 @@
 
 <script>
 // import io from 'socket.io-client'
-import Question from "@/components/Question"
+import Question from '@/components/Question'
 
 const sampleTossup = {
   id: 89565,
   text:
     'This character considers watching twenty crabs crawl to the sea and stoning the twenty-first, "loving not, hating not, just choosing so." He contemplates a mysterious Gnostic concept called "the Quiet," which "made all things," and concludes seven stanzas with the ominous "so He," after making analogies for another figure who "dwelleth i\' the cold of the moon." This character\'s musings are used to satirize Calvinism and "Natural Theology" in a poem by Robert Browning that has him contemplating Setebos. In another work, this character falls in with the louts Stephano and Trinculo, and this son of the witch Sycorax is enslaved due to his attempted rape of Miranda. For 10 points, name this monstrous slave of Prospero from The Tempest.',
-  answer: " Caliban",
+  answer: ' Caliban',
   number: 19,
   tournament_id: 3,
   category_id: 15,
   subcategory_id: 22,
-  round: "Virginia + Dartmouth",
-  created_at: "2017-08-27T22:42:37.752Z",
-  updated_at: "2017-08-28T03:54:17.132Z",
+  round: 'Virginia + Dartmouth',
+  created_at: '2017-08-27T22:42:37.752Z',
+  updated_at: '2017-08-28T03:54:17.132Z',
   quinterest_id: 30049,
   formatted_text:
     '<b>This character considers</b> watching twenty crabs crawl to the sea and stoning the twenty-first, "loving not, hating not, just choosing so." He contemplates a mysterious Gnostic concept called "the Quiet," which "made all things," and concludes seven stanzas with the ominous "so He," after making analogies for another figure who "dwelleth i\' the cold of the moon." This character\'s musings are used to satirize Calvinism and "Natural Theology" in a poem by Robert Browning that has him contemplating Setebos. In another work, this character falls in with the louts Stephano and Trinculo, and this son of the witch Sycorax is enslaved due to his attempted rape of Miranda. For 10 points, name this monstrous slave of Prospero from The Tempest.',
-  formatted_answer: " Caliban",
+  formatted_answer: ' Caliban',
   wikipedia_url: null,
-  url: "https://www.quizdb.org/api/tossups/89565",
-  type: "tossup",
+  url: 'https://www.quizdb.org/api/tossups/89565',
+  type: 'tossup',
   tournament: {
     id: 3,
     year: 2012,
-    name: "2012 ACF Regionals",
+    name: '2012 ACF Regionals',
     address: null,
     quality: null,
     type: null,
     link: null,
-    created_at: "2017-08-27T18:44:13.219Z",
-    updated_at: "2017-08-27T18:44:13.219Z",
-    difficulty: "Regular College",
+    created_at: '2017-08-27T18:44:13.219Z',
+    updated_at: '2017-08-27T18:44:13.219Z',
+    difficulty: 'Regular College',
     difficulty_num: 7,
-    url: "https://www.quizdb.org/api/tournaments/3"
+    url: 'https://www.quizdb.org/api/tournaments/3'
   },
   category: {
     id: 15,
-    name: "Literature",
-    created_at: "2017-08-27T19:30:45.876Z",
-    updated_at: "2017-08-27T19:30:45.876Z",
-    url: "https://www.quizdb.org/api/categories/15"
+    name: 'Literature',
+    created_at: '2017-08-27T19:30:45.876Z',
+    updated_at: '2017-08-27T19:30:45.876Z',
+    url: 'https://www.quizdb.org/api/categories/15'
   },
   subcategory: {
     id: 22,
-    name: "Literature British",
-    created_at: "2017-08-27T19:36:35.094Z",
-    updated_at: "2017-08-27T19:36:35.094Z",
-    url: "https://www.quizdb.org/api/subcategories/22"
+    name: 'Literature British',
+    created_at: '2017-08-27T19:36:35.094Z',
+    updated_at: '2017-08-27T19:36:35.094Z',
+    url: 'https://www.quizdb.org/api/subcategories/22'
   }
 }
 
@@ -83,7 +83,7 @@ export default {
       required: true
     }
   },
-  data: function() {
+  data: function () {
     return {
       socket: null,
       players: {},
@@ -100,22 +100,22 @@ export default {
     }
   },
   computed: {
-    offset() {
+    offset () {
       return this.startTime % this.wordDelay
     }
   },
   methods: {
-    clearTimeout() {
+    clearTimeout () {
       clearTimeout(this.currentTimeout)
       this.currentTimeout = null
     },
-    resetReading() {
+    resetReading () {
       this.stopReading()
 
       this.wordsIn = 0
       this.resumePoint = 0
     },
-    startReading() {
+    startReading () {
       this.isStopped = false
 
       const now = Date.now()
@@ -123,7 +123,7 @@ export default {
 
       this.stepReading()
     },
-    stepReading() {
+    stepReading () {
       const now = Date.now()
       this.lastUpdate = now
       this.wordsIn =
@@ -137,18 +137,18 @@ export default {
         this.currentTimeout = setTimeout(this.stepReading, toNext)
       }
     },
-    stopReading() {
+    stopReading () {
       this.resumePoint = this.wordsIn
       this.isStopped = true
       this.clearTimeout()
     },
-    finishReading() {
+    finishReading () {
       this.stopReading()
       this.wordsIn = Infinity
     }
   },
   watch: {
-    wordDelay(val) {
+    wordDelay (val) {
       const shouldStart = !this.isStopped
       this.stopReading()
 

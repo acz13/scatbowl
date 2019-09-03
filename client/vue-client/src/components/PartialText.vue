@@ -19,19 +19,19 @@ export default {
     }
   },
   computed: {
-    wordArray() {
-      return this.text.split(/\s/g);
+    wordArray () {
+      return this.text.split(/\s/g)
     },
-    numWords() {
-      return this.wordArray.length;
+    numWords () {
+      return this.wordArray.length
     }
   },
   watch: {
-    wordsIn(val) {
+    wordsIn (val) {
       if (val > this.numWords) {
-        this.$emit("reachedEnd");
+        this.$emit('reachedEnd')
       }
     }
   }
-};
+}
 </script>

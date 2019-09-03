@@ -21,10 +21,10 @@
 </template>
 
 <script>
-import PartialText from "./PartialText";
+import PartialText from './PartialText'
 
 export default {
-  name: "Question",
+  name: 'Question',
   props: {
     type: {
       type: String,
@@ -63,5 +63,5 @@ export default {
   components: {
     PartialText
   }
-};
+}
 </script>
