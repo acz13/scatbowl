@@ -5,6 +5,8 @@ const schemas = require('./config/schemas')
 const quizDBQuestionManager = require('./util/quizDBQuestions')
 const dbQuestionManager = require('./util/dbQuestions')
 const checkCorrect = require('../shared/answerChecking')
+const filterByProps = require('./util/filterByProps')
+const { cleanString } = require('./util/sanitize')
 
 // The `Game` class is socket-independent... not sure if the bound emit method
 // is ideal or we should just return promises with objects from everything
@@ -248,7 +250,21 @@ class Game { // Move to this client side eventually
     }
 
     this.currentQuestion = this.questionQueue.pop()
-    this.emit('nextQuestion', { player: player.id, question: this.currentQuestion })
+
+    this.emit('nextQuestion', {
+      player: player.id,
+      question: filterByProps([
+        'tournament',
+        'category',
+        'subcategory',
+        'round',
+        'number',
+        'formatted_text',
+        'formatted_answer',
+        'quizdb_id',
+        'id'
+      ], this.currentQuestion)
+    })
     this.startTime = Date.now()
   }
 }
