@@ -5,7 +5,8 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint --no-fix",
+    "lintfix": "vue-cli-service lint"
   },
   "dependencies": {
     "buefy": "^0.8.0",
@@ -26,12 +27,22 @@
     "babel-eslint": "^10.0.1",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.0.0",
+    "husky": "^3.0.5",
+    "lint-staged": "^9.2.5",
     "node-sass": "^4.12.0",
     "sass-loader": "^7.1.0",
     "vue-cli-plugin-buefy": "^0.3.7",
     "vue-template-compiler": "^2.6.10"
   },
-  "gitHooks": {
-    "pre-commit": "foo"
+  "lint-staged": {
+    "*.{js,vue}": [
+      "npm run lint -s",
+      "git add"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   }
 }
