@@ -1,5 +1,2 @@
 image:
   file: .gitpod.dockerfile
-vscode:
-  extensions:
-    - arcticicestudio.nord-visual-studio-code@0.12.0:qCzfLMR487zHKEpoICLCGQ==
