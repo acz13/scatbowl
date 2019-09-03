@@ -1,11 +1,7 @@
 <template>
   <span>
-    <template v-for="i in Math.min(wordsIn, numWords)">
-      <span v-html="wordArray[i-1]" :key="i"></span>
-      {{ ' ' }}
-    </template>
-    <template v-for="i in numWords - Math.min(wordsIn, numWords)">
-      <span v-html="wordArray[wordsIn + i - 1]" :key="-i" style="visibility: hidden"></span>
+    <template v-for="i in numWords">
+      <span v-html="wordArray[i-1]" :key="i" :class="[i > wordsIn - 1 ? 'unread' : 'read']"></span>
       {{ ' ' }}
     </template>
   </span>
@@ -23,19 +19,19 @@ export default {
     }
   },
   computed: {
-    wordArray () {
-      return this.text.split(/\s/g)
+    wordArray() {
+      return this.text.split(/\s/g);
     },
-    numWords () {
-      return this.wordArray.length
+    numWords() {
+      return this.wordArray.length;
     }
   },
   watch: {
-    wordsIn (val) {
+    wordsIn(val) {
       if (val > this.numWords) {
-        this.$emit('reachedEnd')
+        this.$emit("reachedEnd");
       }
     }
   }
-}
+};
 </script>

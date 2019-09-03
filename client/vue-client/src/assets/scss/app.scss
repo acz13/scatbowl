@@ -64,5 +64,9 @@ $colors: map-merge($colors, $addColors);
 //   }
 // }
 
-@import "~bulma";
+.unread {
+  visibility: hidden;
+}
+
+@import "~bulma/bulma.sass";
 @import "~buefy/src/scss/buefy";
