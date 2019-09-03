@@ -150,3 +150,7 @@ $size-small: $size-7 !default;
 $size-normal: $size-6 !default;
 $size-medium: $size-5 !default;
 $size-large: $size-4 !default;
+
+// Bootstrap style progress bars
+$progress-bar-animation-timing:     1s linear infinite !default;
+$progress-bar-transition:           width .6s ease !default;

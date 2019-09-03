@@ -22,7 +22,47 @@ $addColors: (
 );
 $colors: map-merge($colors, $addColors);
 
+// 4. Provide custom buefy overrides and site styles here
+@import "mixins/gradients";
+
+// .progress.is-striped {
+//   $progress-height: $size-normal;
+
+//   &.is-small {
+//     $progress-height: $size-small;
+//   }
+
+//   &.is-medium {
+//     $progress-height: $size-medium;
+//   }
+  
+//   &.is-large {
+//     $progress-height: $size-large;
+//   }
+
+//   @include gradient-striped();
+//   background-size: $progress-height $progress-height;
+
+//   @keyframes progress-stripes {
+//     0% { background-position-x: $progress-height; }
+//   }
+
+//   &.is-animated {
+//     animation: progress-stripes $progress-bar-animation-timing;
+
+//     @media (prefers-reduced-motion: reduce) {
+//       animation: none;
+//     }
+
+//     &::-webkit-progress-bar {
+//       background-color: transparent
+//     }
+    
+//     &::-moz-progress-bar {
+//       background-color: transparent
+//     }
+//   }
+// }
+
 @import "~bulma";
 @import "~buefy/src/scss/buefy";
-
-// 4. Provide custom buefy overrides and site styles here
