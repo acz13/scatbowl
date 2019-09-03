@@ -12,7 +12,7 @@ class Game { // Move to this client side eventually
   // TODO: Eventually a lot of this could be moved to redis if we want to scale
   constructor (
     settings,
-    userlevels,
+    userLevels,
     questionManager,
     emit
   ) {
@@ -29,6 +29,9 @@ class Game { // Move to this client side eventually
 
     // All the scores and team affiliations are stored here
     this.players = {}
+    this.socketIDs = {}
+
+    this.userLevels = userLevels
 
     this.settings = settings
 
@@ -58,16 +61,27 @@ class Game { // Move to this client side eventually
       promptLevel: this.promptLevel,
       buzzStartTime: this.buzzStartTime,
       players: this.players,
-      settings: this.settings
+      settings: this.settings,
+      userLevels: this.userLevels
     }
   }
 
-  addPlayer (user) {
-    this.emit('userJoin', user)
-
+  addPlayer (user, socketID) {
     if (!Object.prototype.hasOwnProperty.call(this.players, user.id)) {
-      this.players[user.id] = Object.assign({}, user, { team: null, powers: 0, gets: 0, negs: 0 })
+      this.players[user.id] = Object.assign({}, user, { team: null, powers: 0, gets: 0, negs: 0, status: 2 })
     }
+
+    if (!Object.prototype.hasOwnProperty.call(this.socketIDs, user.id)) {
+      this.socketIDs[user.id] = new Set()
+    }
+
+    this.socketIDs[user.id].add(socketID)
+
+    if (this.socketIDs[user.id].size > 1) {
+      return this.gameInfo
+    }
+
+    this.emit('userJoin', user)
 
     this.emit('updatePlayer',
       {
@@ -76,6 +90,20 @@ class Game { // Move to this client side eventually
       })
 
     return this.gameInfo
+  }
+
+  leave (userid, socketID) {
+    this.socketIDs[userid].delete(socketID)
+
+    if (this.socketIDs[userid].size == 0) {
+      this.players[userid].status = 0
+
+      this.emit('updatePlayer',
+      {
+        player: userid,
+        data: this.players[userid]
+      })
+    }
   }
 
   chat (player, message) {
@@ -214,7 +242,7 @@ class Game { // Move to this client side eventually
         })
         console.log('Fetched ' + this.questionQueue.length + ' questions')
       } catch (err) {
-        player.emit('serverError', err.toString())
+        player.emit('gameError', err.toString())
         return // Add in a Guru Meditation Bowl thing later
       }
     }

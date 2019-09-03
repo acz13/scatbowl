@@ -149,7 +149,7 @@ passport.use('guest', new CustomStrategy(
 
       await redis.saddAsync('guest_names', id)
 
-      cb(null, { id: id, username: 'guest' + id, isGuest: true })
+      cb(null, { id: 'guest' + id, username: 'guest' + id, isGuest: true })
     } catch (err) {
       cb(err)
     }
