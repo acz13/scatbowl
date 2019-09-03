@@ -4,7 +4,7 @@
       :wordsIn="wordsIn"
       v-bind="question"
       @reachedEnd="finishReading"
-      :showAnswer="wordsIn === -1"
+      :showAnswer="wordsIn === Number.POSITIVE_INFINITY"
     ></Question>
     <b-button @click="startReading">Start Reading</b-button>
     <b-button @click="stopReading">Stop Reading</b-button>
@@ -13,10 +13,10 @@
     <section>
       <b-field grouped>
         <b-field expanded>
-          <b-slider v-model="wordDelay" :min="50" :max="500" lazy></b-slider>
+          <b-slider v-model="wordDelay" :min="25" :max="500" lazy></b-slider>
         </b-field>
         <b-field>
-          <b-input v-model="wordDelay" type="number"></b-input>
+          <b-input v-model="wordDelay" type="number" :min="25" :max="50"></b-input>
         </b-field>
       </b-field>
     </section>
@@ -41,7 +41,7 @@ const sampleTossup = {
   updated_at: "2017-08-28T03:54:17.132Z",
   quinterest_id: 30049,
   formatted_text:
-    'This character considers watching twenty crabs crawl to the sea and stoning the twenty-first, "loving not, hating not, just choosing so." He contemplates a mysterious Gnostic concept called "the Quiet," which "made all things," and concludes seven stanzas with the ominous "so He," after making analogies for another figure who "dwelleth i\' the cold of the moon." This character\'s musings are used to satirize Calvinism and "Natural Theology" in a poem by Robert Browning that has him contemplating Setebos. In another work, this character falls in with the louts Stephano and Trinculo, and this son of the witch Sycorax is enslaved due to his attempted rape of Miranda. For 10 points, name this monstrous slave of Prospero from The Tempest.',
+    '<b>This character considers</b> watching twenty crabs crawl to the sea and stoning the twenty-first, "loving not, hating not, just choosing so." He contemplates a mysterious Gnostic concept called "the Quiet," which "made all things," and concludes seven stanzas with the ominous "so He," after making analogies for another figure who "dwelleth i\' the cold of the moon." This character\'s musings are used to satirize Calvinism and "Natural Theology" in a poem by Robert Browning that has him contemplating Setebos. In another work, this character falls in with the louts Stephano and Trinculo, and this son of the witch Sycorax is enslaved due to his attempted rape of Miranda. For 10 points, name this monstrous slave of Prospero from The Tempest.',
   formatted_answer: " Caliban",
   wikipedia_url: null,
   url: "https://www.quizdb.org/api/tossups/89565",
@@ -144,7 +144,7 @@ export default {
     },
     finishReading() {
       this.stopReading()
-      this.wordsIn = -1
+      this.wordsIn = Infinity
     }
   },
   watch: {
