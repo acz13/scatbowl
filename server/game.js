@@ -83,9 +83,9 @@ class Game { // Move to this client side eventually
       return this.gameInfo
     }
 
-    this.emit('userJoin', user)
+    this.emit('userJoined', user)
 
-    this.emit('updatePlayer',
+    this.emit('playerUpdated',
       {
         player: user.id,
         data: this.players[user.id]
@@ -97,10 +97,12 @@ class Game { // Move to this client side eventually
   leave (userid, socketID) {
     this.socketIDs[userid].delete(socketID)
 
-    if (this.socketIDs[userid].size == 0) {
+    if (this.socketIDs[userid].size === 0) {
       this.players[userid].status = 0
 
-      this.emit('updatePlayer',
+      this.emit('userLeft', userid)
+
+      this.emit('playerUpdated',
         {
           player: userid,
           data: this.players[userid]
@@ -129,7 +131,7 @@ class Game { // Move to this client side eventually
     this.questionQueue = null
     this.settings = settings
 
-    this.emit('changeSettings', { player: player.id, newSettings: this.settings })
+    this.emit('settingsChanged', { player: player.id, newSettings: this.settings })
   }
 
   buzz (player, time) {
@@ -156,7 +158,7 @@ class Game { // Move to this client side eventually
         // TODO: decide who should win the buzzer race with pings and delays eventually
         this.buzzList.sort((a, b) => (a.timeSince > b.timeSince) ? 1 : -1)
         const winner = this.buzzList[0]
-        this.emit('buzz', { winner: winner, losers: this.buzzList.slice(1) })
+        this.emit('playerBuzzed', { winner: winner, losers: this.buzzList.slice(1) })
         this.isBuzzing = winner.player
         this.buzzList = null
       }, 50)
@@ -173,7 +175,7 @@ class Game { // Move to this client side eventually
     const power = false
     const result = checkCorrect(answer, this.currentQuestion.answer, displayedText, this.currentQuestion.text /*, this.currentQuestion.category */)
 
-    this.emit('answer', { answer: answer, result: result })
+    this.emit('answerSubmitted', { answer: answer, result: result })
 
     if (result === 'correct') {
       this.resetQuestion()
@@ -184,22 +186,28 @@ class Game { // Move to this client side eventually
         this.players[player.id].gets++
       }
 
-      this.emit('updatePlayer',
+      this.emit('answerCorrect')
+
+      this.emit('playerUpdated',
         {
           player: player.id,
           data: this.players[player.id]
         })
     } else if (result === 'wrong') {
+      this.resetQuestion()
+
       this.players[player.id].negs++
 
-      this.emit('updatePlayer',
+      this.emit('answerWrong')
+
+      this.emit('playerUpdated',
         {
           player: player.id,
           data: this.players[player.id]
         })
     } else if (result === 'prompt' /* Handle Prompts Later */) {
       this.promptLevel++
-      this.emit('prompt', { answer: answer, promptLevel: this.promptLevel })
+      this.emit('answerPrompted', { answer: answer, promptLevel: this.promptLevel })
     }
   }
 
@@ -215,7 +223,7 @@ class Game { // Move to this client side eventually
 
     this.resetQuestion()
 
-    this.emit('skipQuestion', { player: player.id })
+    this.emit('questionSkipped', { player: player.id })
 
     return this.nextQuestion(player)
   }
@@ -249,9 +257,14 @@ class Game { // Move to this client side eventually
       }
     }
 
-    this.currentQuestion = this.questionQueue.pop()
+    const newQuestion = this.questionQueue.pop()
+    newQuestion.formatted_text = cleanString(newQuestion.formatted_text)
+    newQuestion.formatted_answer = cleanString(newQuestion.formatted_answer)
 
-    this.emit('nextQuestion', {
+    const now = Date.now()
+    this.startTime = now - now % this.settings.textDelay + this.settings.textDelay
+
+    this.emit('questionLoaded', {
       player: player.id,
       question: filterByProps([
         'tournament',
@@ -263,9 +276,9 @@ class Game { // Move to this client side eventually
         'formatted_answer',
         'quizdb_id',
         'id'
-      ], this.currentQuestion)
+      ], this.currentQuestion),
+      startTime: this.startTime
     })
-    this.startTime = Date.now()
   }
 }
 
