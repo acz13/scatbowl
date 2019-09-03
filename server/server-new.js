@@ -43,7 +43,7 @@ app.use(history())
 
 const gameRooms = {}
 
-function joinRoom(socket, room) {
+function joinRoom (socket, room) {
   if (socket.roomName) {
     socket.gameRoom.leave(socket.userID)
     socket.leave(socket.roomName)
@@ -57,7 +57,7 @@ function joinRoom(socket, room) {
   console.log(socket.id)
   socket.emit('gameInfo', gameRooms[room].addPlayer(socket.request.user, socket.id))
   socket.gameRoom = gameRooms[room]
-  console.log("joined " + room)
+  console.log('joined ' + room)
   socket.join(room)
 }
 
@@ -82,7 +82,7 @@ io.on('connection', function (socket) {
   if (socket.handshake.query.room) {
     joinRoom(socket, socket.handshake.query.room)
 
-    socket.roomName = socket.handshake.query.room  
+    socket.roomName = socket.handshake.query.room
   }
 
   socket.on('getGameInfo', () => {

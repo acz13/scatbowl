@@ -99,10 +99,10 @@ class Game { // Move to this client side eventually
       this.players[userid].status = 0
 
       this.emit('updatePlayer',
-      {
-        player: userid,
-        data: this.players[userid]
-      })
+        {
+          player: userid,
+          data: this.players[userid]
+        })
     }
   }
 
@@ -168,7 +168,7 @@ class Game { // Move to this client side eventually
 
     // const displayedText (Should we calculate this server side?)
     const displayedText = ''
-    let power = false
+    const power = false
     const result = checkCorrect(answer, this.currentQuestion.answer, displayedText, this.currentQuestion.text /*, this.currentQuestion.category */)
 
     this.emit('answer', { answer: answer, result: result })
