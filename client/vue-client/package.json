@@ -9,7 +9,7 @@
     "lintfix": "vue-cli-service lint"
   },
   "dependencies": {
-    "buefy": "^0.8.0",
+    "buefy": "^0.8.3",
     "bulma": "0.7.5",
     "core-js": "^2.6.5",
     "register-service-worker": "^1.6.2",
@@ -30,6 +30,7 @@
     "husky": "^3.0.5",
     "lint-staged": "^9.2.5",
     "node-sass": "^4.12.0",
+    "purgecss-webpack-plugin": "^1.5.0",
     "sass-loader": "^7.1.0",
     "vue-cli-plugin-buefy": "^0.3.7",
     "vue-template-compiler": "^2.6.10"
