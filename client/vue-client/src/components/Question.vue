@@ -23,6 +23,9 @@
 <script>
 import PartialText from './PartialText'
 
+import BCollapse from 'buefy/src/components/collapse/Collapse'
+import BIcon from 'buefy/src/components/icon/Icon'
+
 export default {
   name: 'Question',
   props: {
@@ -61,7 +64,9 @@ export default {
   },
   computed: {},
   components: {
-    PartialText
+    PartialText,
+    BCollapse,
+    BIcon
   }
 }
 </script>

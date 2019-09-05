@@ -41,6 +41,11 @@
 // import io from 'socket.io-client'
 import Question from '@/components/Question'
 
+import BButton from 'buefy/src/components/button/Button'
+import BField from 'buefy/src/components/field/Field'
+import BSlider from 'buefy/src/components/slider/Slider'
+import BSliderTick from 'buefy/src/components/slider/SliderTick'
+
 const sampleTossup = {
   id: 89565,
   text:
@@ -209,7 +214,11 @@ export default {
   //   next()
   // },
   components: {
-    Question
+    Question,
+    BButton,
+    BField,
+    BSlider,
+    BSliderTick
   }
 }
 </script>
