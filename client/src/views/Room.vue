@@ -2,15 +2,15 @@
   <section class="room section">
     <div class="container">
       <Question
-        :wordsIn="wordsIn"
+        :wordsIn="timer.ticks"
         v-bind="question"
         @reachedEnd="finishReading"
-        :showAnswer="wordsIn === Number.POSITIVE_INFINITY"
+        :showAnswer="timer.ticks === Number.POSITIVE_INFINITY"
       ></Question>
-      <b-button @click="startReading">Start Reading</b-button>
-      <b-button @click="stopReading">Stop Reading</b-button>
-      <b-button @click="resetReading">Reset Reading</b-button>
-      <p>Words in: {{ wordsIn }} | Offset: {{ offset }} | Last Update: {{ lastUpdate % wordDelay }} | Last Timeout: {{ lastTimeout }}</p>
+      <b-button @click="timer.start">Start Reading</b-button>
+      <b-button @click="timer.stop">Stop Reading</b-button>
+      <b-button @click="timer.reset">Reset Reading</b-button>
+      <p>Words in: {{ timer.ticks }} | Offset: {{ timer.offset }} | Last Update: {{ timer.debug.lastUpdate % wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }}</p>
       <section>
         <b-field grouped label="Delay">
           <b-field expanded>
@@ -40,6 +40,9 @@
 <script>
 // import io from 'socket.io-client'
 import Question from '@/components/Question'
+
+import { ref, onMounted } from '@vue/composition-api'
+import { useTimer } from '@/hooks/timer'
 
 const sampleTossup = {
   id: 89565,
@@ -97,81 +100,30 @@ export default {
       required: true
     }
   },
-  data: function () {
+  setup () {
+    const wordDelay = ref(150)
+
+    const timer = useTimer(wordDelay)
+
+    function finishReading () {
+      timer.stop()
+      timer.ticks = Infinity
+    }
+
+    function wpmInput (wpm) {
+      wordDelay.value = Math.round(60000 / wpm)
+    }
+
+    onMounted(() => {
+      alert('component is mounted!')
+    })
+
     return {
-      socket: null,
-      players: {},
-      settings: {},
-      currentTimeout: null,
-      resumePoint: 0,
-      wordsIn: 0,
-      startTime: null,
-      wordDelay: 150,
-      question: sampleTossup,
-      isStopped: true,
-      lastUpdate: null,
-      lastTimeout: null
-    }
-  },
-  computed: {
-    offset () {
-      return this.startTime % this.wordDelay
-    }
-  },
-  methods: {
-    clearTimeout () {
-      clearTimeout(this.currentTimeout)
-      this.currentTimeout = null
-    },
-    resetReading () {
-      this.stopReading()
-
-      this.wordsIn = 0
-      this.resumePoint = 0
-    },
-    startReading () {
-      this.isStopped = false
-
-      const now = Date.now()
-      this.startTime = now
-
-      this.stepReading()
-    },
-    stepReading () {
-      const now = Date.now()
-      this.lastUpdate = now
-      this.wordsIn =
-        Math.floor((now + 3 - this.startTime) / this.wordDelay) +
-        this.resumePoint
-      if (!this.isStopped) {
-        const toNext =
-          this.wordDelay + 3 - ((now + 3 - this.offset) % this.wordDelay)
-        this.lastTimeout = toNext
-
-        this.currentTimeout = setTimeout(this.stepReading, toNext)
-      }
-    },
-    stopReading () {
-      this.resumePoint = this.wordsIn
-      this.isStopped = true
-      this.clearTimeout()
-    },
-    finishReading () {
-      this.stopReading()
-      this.wordsIn = Infinity
-    },
-    wpmInput (wpm) {
-      this.wordDelay = Math.round(60000 / wpm)
-    }
-  },
-  watch: {
-    wordDelay (val) {
-      const shouldStart = !this.isStopped
-      this.stopReading()
-
-      if (shouldStart) {
-        this.startReading()
-      }
+      wordDelay,
+      timer,
+      finishReading,
+      wpmInput,
+      question: sampleTossup
     }
   },
   // created () {

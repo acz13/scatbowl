@@ -9,6 +9,7 @@
     "lintfix": "vue-cli-service lint"
   },
   "dependencies": {
+    "@vue/composition-api": "^0.3.0",
     "buefy": "^0.8.3",
     "bulma": "0.7.5",
     "core-js": "^2.6.5",
