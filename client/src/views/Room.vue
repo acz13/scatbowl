@@ -2,46 +2,27 @@
   <section class="room section">
     <div class="container">
       <Question
-        :wordsIn="timer.ticks"
+        :wordsIn="wordsIn"
         v-bind="question"
         @reachedEnd="finishReading"
-        :showAnswer="timer.ticks === Number.POSITIVE_INFINITY"
+        :revealed="revealAnswer"
+        :formatted_answer="revealAnswer ? question.formatted_answer : null"
       ></Question>
       <b-button @click="timer.start">Start Reading</b-button>
       <b-button @click="timer.stop">Stop Reading</b-button>
       <b-button @click="timer.reset">Reset Reading</b-button>
-      <p>Words in: {{ timer.ticks }} | Offset: {{ timer.offset }} | Last Update: {{ timer.debug.lastUpdate % wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }}</p>
-      <section>
-        <b-field grouped label="Delay">
-          <b-field expanded>
-            <b-slider v-model="wordDelay" :min="25" :max="500" lazy></b-slider>
-          </b-field>
-          <b-field>
-            <b-input v-model.lazy="wordDelay" type="number" :min="25" :max="500"></b-input>
-          </b-field>
-        </b-field>
-        <b-field grouped label="WPM">
-          <b-field expanded>
-            <b-slider :value="Math.round(60000 / wordDelay)" @input="wpmInput($event)" :min="120" :max="2400" lazy>
-                <template v-for="val in 95">
-                    <b-slider-tick :value="60000 / (24 + 5 * val)" :key="val">{{ 24 + 5 * val }}</b-slider-tick>
-                </template>
-            </b-slider>
-          </b-field>
-          <b-field>
-            <b-input :value="Math.round(60000 / wordDelay)" @change="wpmInput($event)" type="number" :min="120" :max="2400"></b-input>
-          </b-field>
-        </b-field>
-      </section>
+      <p>Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }}</p>
     </div>
   </section>
 </template>
 
 <script>
 // import io from 'socket.io-client'
-import Question from '@/components/Question'
+import { ref, computed } from '@vue/composition-api'
 
-import { ref, onMounted } from '@vue/composition-api'
+import BButton from 'buefy/components/src/button/Button'
+
+import Question from '@/components/Question'
 import { useTimer } from '@/hooks/timer'
 
 const sampleTossup = {
@@ -103,26 +84,30 @@ export default {
   setup () {
     const wordDelay = ref(150)
 
-    const timer = useTimer(wordDelay)
+    const { ticks: wordsIn, ...timer } = useTimer(wordDelay)
 
     function finishReading () {
       timer.stop()
-      timer.ticks = Infinity
+      wordsIn.value = Infinity
     }
 
     function wpmInput (wpm) {
       wordDelay.value = Math.round(60000 / wpm)
     }
 
-    onMounted(() => {
-      alert('component is mounted!')
+    const revealAnswer = computed(() => {
+      return wordsIn === Number.POSITIVE_INFINITY
     })
+
+    timer.start()
 
     return {
       wordDelay,
+      wordsIn,
       timer,
       finishReading,
       wpmInput,
+      revealAnswer,
       question: sampleTossup
     }
   },
@@ -161,7 +146,8 @@ export default {
   //   next()
   // },
   components: {
-    Question
+    Question,
+    BButton
   }
 }
 </script>
