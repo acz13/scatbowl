@@ -84,7 +84,7 @@ export default {
   setup () {
     const wordDelay = ref(150)
 
-    const { ticks: wordsIn, ...timer } = useTimer(wordDelay)
+    const { ticks: wordsIn, ...timer } = useTimer(wordDelay, true)
 
     function finishReading () {
       timer.stop()
