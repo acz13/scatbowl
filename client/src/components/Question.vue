@@ -1,26 +1,32 @@
 <template>
-  <b-collapse class="card">
-    <div slot="trigger" slot-scope="props" class="card-header" role="button">
-      <p
-        class="card-header-title"
-      >{{ tournament.name }} | {{ category.name }} | {{ subcategory.name }}</p>
-      <a class="card-header-icon">
-        <b-icon :icon="props.open ? 'menu-down' : 'menu-up'"></b-icon>
-      </a>
-    </div>
+  <component :is="revealed ? 'b-collapse' : 'div'" class="card">
+    <template v-slot:[slotName]="props">
+      <div class="card-header" role="button">
+        <p class="card-header-title tournaments-list">
+          {{ tournament.name }} | {{ category.name }} | {{ subcategory.name }}
+        </p>
+        <a class="card-header-icon">
+          <b-icon :icon="props.open ? 'menu-down' : 'menu-up'"></b-icon>
+        </a>
+      </div>
+    </template>
     <div class="card-content has-text-left">
-      <PartialText :text="formatted_text" :wordsIn="wordsIn" v-on="$listeners"></PartialText>
+      <span v-if="revealed" v-html="formatted_text"></span>
+      <PartialText v-else :wordArray="wordArray" :wordsIn="wordsIn"></PartialText>
     </div>
     <footer class="card-footer">
       <div class="card-footer-item answer-container">
-        <b>ANSWER:</b>
-        <span v-if="showAnswer" v-html="formatted_answer"></span>
+        <b>ANSWER:&nbsp;</b>
+        <span v-if="revealed" v-html="formatted_answer"></span>
       </div>
     </footer>
-  </b-collapse>
+  </component>
 </template>
 
 <script>
+import BCollapse from 'buefy/components/src/collapse/Collapse'
+import BIcon from 'buefy/components/src/icon/Icon'
+
 import PartialText from './PartialText'
 
 export default {
@@ -50,7 +56,7 @@ export default {
     number: {
       type: Number
     },
-    showAnswer: {
+    revealed: {
       type: Boolean,
       default: false
     },
@@ -59,9 +65,28 @@ export default {
       default: Infinity
     }
   },
-  computed: {},
+  computed: {
+    wordArray () {
+      return this.formatted_text.split(/\s/g)
+    },
+    numWords () {
+      return this.wordArray.length
+    },
+    slotName () {
+      return this.revealed ? 'trigger' : null
+    }
+  },
+  watch: {
+    wordsIn () {
+      if (this.wordsIn >= this.wordArray.length) {
+        this.$emit('reachedEnd')
+      }
+    }
+  },
   components: {
-    PartialText
+    PartialText,
+    BCollapse,
+    BIcon
   }
 }
 </script>
