@@ -1,5 +1,6 @@
 const qs = require('qs')
-const fetch = require('node-fetch')
+
+const fetch = typeof window.fetch === 'undefined' ? require('node-fetch') : window.fetch
 
 // Blatantly ripped off from Raynor Kuang's source code
 // See https://github.com/UlyssesInvictus/QuizDB/blob/master/client/src/actions/actions.js#L81
