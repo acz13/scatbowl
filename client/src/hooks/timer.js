@@ -1,6 +1,6 @@
-import { isRef, reactive, ref, computed, toRefs, watch } from '@vue/composition-api'
+import { reactive, ref, computed, watch } from '@vue/composition-api'
 
-export function useTimer (delay) {
+export function useTimer (delay, offline) {
   let timeoutID = null
 
   function clearTimer () {
@@ -11,14 +11,13 @@ export function useTimer (delay) {
   const status = reactive({
     startTime: null,
     stopped: true,
-    resumePoint: 0,
-    delay: null
+    resumePoint: 0
   })
 
   const ticks = ref(0)
 
   const offset = computed(() =>
-    status.startTime / status.delay
+    status.startTime % delay.value
   )
 
   const debug = reactive({
@@ -29,31 +28,39 @@ export function useTimer (delay) {
   function start (startTime) {
     status.stopped = false
 
-    status.startTime = startTime || Date.now()
+    status.startTime = Number.isInteger(startTime) ? startTime : Date.now()
 
-    timeoutID = setTimeout(step(), Math.max(status.startTime - Date.now()))
+    timeoutID = setTimeout(step(), Math.max(status.startTime - Date.now(), 0))
+  }
+
+  function update (now) {
+    ticks.value =
+      Math.floor((now + 3 - status.startTime) / delay.value) +
+      status.resumePoint
+    return delay.value + 3 - ((now + 3 - offset.value) % delay.value)
   }
 
   function step () {
-    const now = Date.now()
-    debug.lastUpdate = now
-    ticks.value =
-      Math.floor((now + 3 - status.startTime) / status.delay) +
-      status.resumePoint
     if (!status.stopped) {
-      const toNext =
-        status.delay + 3 - ((now + 3 - offset) % status.delay)
+      const now = Date.now()
+      debug.lastUpdate = now
+
+      const toNext = update(now)
       debug.lastTimeout = toNext
 
       timeoutID = setTimeout(step, toNext)
     }
   }
 
-  function stop () {
-    status.resumePoint = ticks.value
-
+  function stop (now) {
     status.stopped = true
     clearTimer()
+
+    if (Number.isInteger(now)) {
+      update(now)
+    }
+
+    status.resumePoint = ticks.value
   }
 
   function reset () {
@@ -63,10 +70,8 @@ export function useTimer (delay) {
     status.resumePoint = 0
   }
 
-  watch(() => {
-    status.delay = isRef(delay) ? delay.value : delay
-
-    if (!status.stopped) {
+  watch(delay, () => {
+    if (!status.stopped && offline) {
       stop()
 
       start()
@@ -74,8 +79,8 @@ export function useTimer (delay) {
   })
 
   return {
-    status: toRefs(status),
-    debug: toRefs(debug),
+    status,
+    debug,
     offset,
     ticks,
     start,
