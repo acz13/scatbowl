@@ -1,6 +1,6 @@
 @import "~bulma/sass/utilities/initial-variables";
 @import "~bulma/sass/utilities/functions";
-// 1. Set your own initial variables and derived 
+// 1. Set your own initial variables and derived
 //    variables in _variables.scss
 @import "variables";
 
@@ -35,7 +35,7 @@ $colors: map-merge($colors, $addColors);
 //   &.is-medium {
 //     $progress-height: $size-medium;
 //   }
-  
+
 //   &.is-large {
 //     $progress-height: $size-large;
 //   }
@@ -57,16 +57,12 @@ $colors: map-merge($colors, $addColors);
 //     &::-webkit-progress-bar {
 //       background-color: transparent
 //     }
-    
+
 //     &::-moz-progress-bar {
 //       background-color: transparent
 //     }
 //   }
 // }
-
-.unread {
-  visibility: hidden;
-}
 
 @import "~bulma/bulma.sass";
 @import "~buefy/src/scss/buefy";
