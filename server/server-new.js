@@ -17,6 +17,15 @@ const passport = require('./config/passport')
 const passportSocketIo = require('passport.socketio')
 const flash = require('connect-flash')
 
+const cors = require('cors')
+app.use(cors())
+
+const proxy = require('http-proxy-middleware')
+
+app.use('/api', proxy('https://www.quizdb.org/api', { changeOrigin: true }))
+app.use('/', proxy('http://localhost:8080', { changeOrigin: true }))
+
+
 const SESSION_SECRET = process.env.SESSION_SECRET || 'state college academic tournament!'
 
 app.use(session({
@@ -35,9 +44,9 @@ app.use(passport.session())
 app.use('/auth', require('./routes/auth'))
 
 const path = require('path')
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/index.html'))
-})
+// app.get('/', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../client/index.html'))
+// })
 
 app.use(history())
 
