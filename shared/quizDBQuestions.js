@@ -1,6 +1,11 @@
 const qs = require('qs')
+var fetch
 
-const fetch = typeof window.fetch === 'undefined' ? require('node-fetch') : window.fetch
+if (typeof window === "undefined" || typeof window.fetch === "undefined") {
+    fetch = require('node-fetch')
+} else {
+    fetch = window.fetch
+}
 
 // Blatantly ripped off from Raynor Kuang's source code
 // See https://github.com/UlyssesInvictus/QuizDB/blob/master/client/src/actions/actions.js#L81
@@ -49,7 +54,7 @@ function fetchQuestionsFromQuizDB ({
   const searchQueryString = qs.stringify(searchParamsObject, {
     arrayFormat: 'brackets'
   })
-  return fetch(`https://www.quizdb.org/api/${searchEndpoint}?${searchQueryString}`)
+  return fetch(`/api/${searchEndpoint}?${searchQueryString}`)
     .then(
       response => response.json()
     ).then(

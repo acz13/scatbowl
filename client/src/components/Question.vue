@@ -1,6 +1,6 @@
 <template>
   <component :is="revealed ? 'b-collapse' : 'div'" class="card">
-    <template v-slot:[slotName]="props">
+    <template v-if="revealed" v-slot:[slotName]="props">
       <div class="card-header" role="button">
         <p class="card-header-title tournaments-list">
           {{ tournament.name }} | {{ category.name }} | {{ subcategory.name }}
@@ -10,6 +10,11 @@
         </a>
       </div>
     </template>
+    <div v-else class="card-header">
+      <p class="card-header-title tournaments-list">
+        {{ tournament.name }} | {{ category.name }} | {{ subcategory.name }}
+      </p>
+    </div>
     <div class="card-content has-text-left">
       <span v-if="revealed" v-html="formatted_text"></span>
       <PartialText v-else :wordArray="wordArray" :wordsIn="wordsIn"></PartialText>
@@ -24,8 +29,8 @@
 </template>
 
 <script>
-import BCollapse from 'buefy/components/src/collapse/Collapse'
-import BIcon from 'buefy/components/src/icon/Icon'
+import BCollapse from 'buefy/src/components/collapse/Collapse'
+import BIcon from 'buefy/src/components/icon/Icon'
 
 import PartialText from './PartialText'
 

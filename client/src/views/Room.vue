@@ -3,15 +3,21 @@
     <div class="container">
       <Question
         :wordsIn="wordsIn"
-        v-bind="question"
+        v-bind="currentQuestion"
         @reachedEnd="finishReading"
         :revealed="revealAnswer"
-        :formatted_answer="revealAnswer ? question.formatted_answer : null"
+        :formatted_answer="revealAnswer ? question.formatted_answer : ''"
       ></Question>
       <b-button @click="timer.start">Start Reading</b-button>
       <b-button @click="timer.stop">Stop Reading</b-button>
       <b-button @click="timer.reset">Reset Reading</b-button>
       <p>Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }}</p>
+      <Question
+        v-for="question in questionLog"
+        v-bind="question"
+        revealed
+        :key="question.id || question.quizdbid"
+      ></Question>
     </div>
   </section>
 </template>
@@ -20,10 +26,12 @@
 // import io from 'socket.io-client'
 import { ref, computed } from '@vue/composition-api'
 
-import BButton from 'buefy/components/src/button/Button'
+import BButton from 'buefy/src/components/button/Button'
 
 import Question from '@/components/Question'
 import { useTimer } from '@/hooks/timer'
+
+import quizDBQuestionManager from '@shared/quizDBQuestions'
 
 const sampleTossup = {
   id: 89565,
@@ -82,6 +90,59 @@ export default {
     }
   },
   setup () {
+    // Question management
+    const questionQueue = []
+    const questionManager = quizDBQuestionManager
+
+    const nextLocked = ref(false)
+    const fetchLocked = ref(false)
+
+    function clearQuestions () {
+      questionQueue.length = 0
+      fetchLocked.value = true
+    }
+
+    async function loadQuestions (options = {}) {
+      if (fetchLocked.value) {
+        return
+      }
+
+      const newQuestions = await questionManager.fetchRandomTossups(options)
+
+      if (fetchLocked.value) {
+        return
+      }
+
+      questionQueue.push(...newQuestions)
+    }
+
+    const questionLog = ref([])
+    const currentQuestion = ref(sampleTossup)
+
+    async function nextQuestion () {
+      questionLog.value.push(currentQuestion.value)
+
+      if (nextLocked.value) {
+        return
+      }
+
+      nextLocked.value = true
+      fetchLocked.value = false
+
+      if (questionQueue.length === 0) {
+        await loadQuestions()
+      } else if (questionQueue.length === 1) {
+        loadQuestions() // Background
+      }
+
+      if (fetchLocked.value) {
+        return
+      }
+
+      currentQuestion.value = questionQueue.pop()
+    }
+
+    // Timer and Reading
     const wordDelay = ref(150)
 
     const { ticks: wordsIn, ...timer } = useTimer(wordDelay, true)
@@ -99,7 +160,7 @@ export default {
       return wordsIn === Number.POSITIVE_INFINITY
     })
 
-    timer.start()
+    nextQuestion().then(() => timer.start())
 
     return {
       wordDelay,
@@ -108,7 +169,9 @@ export default {
       finishReading,
       wpmInput,
       revealAnswer,
-      question: sampleTossup
+      currentQuestion,
+      questionLog,
+      clearQuestions
     }
   },
   // created () {

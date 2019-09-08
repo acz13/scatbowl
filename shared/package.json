@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "dependencies": {
+    "node-fetch": "^2.6.0",
+    "qs": "^6.8.0"
+  }
+}
