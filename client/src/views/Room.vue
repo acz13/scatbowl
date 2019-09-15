@@ -1,26 +1,39 @@
 <template>
   <section class="room section">
     <div class="container">
-      <Question
-        :wordsIn="wordsIn"
-        v-bind="currentQuestion"
-        @reachedEnd="finishReading"
-        :revealed="revealAnswer"
-        :formatted_answer="revealAnswer ? question.formatted_answer : ''"
-      ></Question>
       <b-button @click="timer.start">Start Reading</b-button>
       <b-button @click="timer.stop">Stop Reading</b-button>
       <b-button @click="timer.reset">Reset Reading</b-button>
+      <b-button @click="nextQuestion">Next Question</b-button>
       <p>Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }}</p>
-      <Question
-        v-for="question in questionLog"
-        v-bind="question"
-        revealed
-        :key="question.id || question.quizdbid"
-      ></Question>
+
+      <slide-up-down :open="!inTransition" down>
+        <Question
+          :wordsIn="wordsIn"
+          v-bind="currentQuestion || {}"
+          @reachedEnd="finishReading"
+          :revealed="revealAnswer"
+          v-show="!inTransition"
+          :formatted_answer="revealAnswer ? currentQuestion.formatted_answer : ''"
+        ></Question>
+      </slide-up-down>
+      <template v-for="i in Math.min(logLength, 10)">
+        <Question
+          v-bind="questionLog[logLength - i]"
+          :key="logLength - i"
+          revealed
+          startClosing
+        ></Question>
+      </template>
     </div>
   </section>
 </template>
+
+<style scoped>
+  .question-list-enter {
+    /* transition: transform 3s; */
+  }
+</style>
 
 <script>
 // import io from 'socket.io-client'
@@ -29,10 +42,13 @@ import { ref, computed } from '@vue/composition-api'
 import BButton from 'buefy/src/components/button/Button'
 
 import Question from '@/components/Question'
+import SlideUpDown from '@/components/SlideUpDown'
+
 import { useTimer } from '@/hooks/timer'
 
 import quizDBQuestionManager from '@shared/quizDBQuestions'
 
+/**
 const sampleTossup = {
   id: 89565,
   text:
@@ -81,6 +97,7 @@ const sampleTossup = {
     url: 'https://www.quizdb.org/api/subcategories/22'
   }
 }
+*/
 
 export default {
   props: {
@@ -89,7 +106,7 @@ export default {
       required: true
     }
   },
-  setup () {
+  setup (_, { root }) {
     // Question management
     const questionQueue = []
     const questionManager = quizDBQuestionManager
@@ -117,11 +134,13 @@ export default {
     }
 
     const questionLog = ref([])
-    const currentQuestion = ref(sampleTossup)
+    const logLength = computed(() => questionLog.value.length)
+
+    const currentQuestion = ref(null)
+
+    const inTransition = ref(false)
 
     async function nextQuestion () {
-      questionLog.value.push(currentQuestion.value)
-
       if (nextLocked.value) {
         return
       }
@@ -139,11 +158,29 @@ export default {
         return
       }
 
+      const oldQuestion = currentQuestion.value
+
+      timer.reset()
       currentQuestion.value = questionQueue.pop()
+
+      nextLocked.value = false
+
+      inTransition.value = true
+
+      if (oldQuestion) {
+        questionLog.value.push(oldQuestion)
+      }
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          inTransition.value = false
+          timer.start()
+        })
+      })
     }
 
     // Timer and Reading
-    const wordDelay = ref(150)
+    const wordDelay = ref(25)
 
     const { ticks: wordsIn, ...timer } = useTimer(wordDelay, true)
 
@@ -157,7 +194,7 @@ export default {
     }
 
     const revealAnswer = computed(() => {
-      return wordsIn === Number.POSITIVE_INFINITY
+      return wordsIn.value === Number.POSITIVE_INFINITY
     })
 
     nextQuestion().then(() => timer.start())
@@ -170,8 +207,12 @@ export default {
       wpmInput,
       revealAnswer,
       currentQuestion,
+      nextQuestion,
       questionLog,
-      clearQuestions
+      clearQuestions,
+      nextLocked,
+      inTransition,
+      logLength
     }
   },
   // created () {
@@ -210,7 +251,8 @@ export default {
   // },
   components: {
     Question,
-    BButton
+    BButton,
+    SlideUpDown
   }
 }
 </script>
