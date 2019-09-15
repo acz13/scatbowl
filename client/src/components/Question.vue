@@ -1,65 +1,68 @@
 <template>
-  <component :is="revealed ? 'b-collapse' : 'div'" class="card">
-    <template v-if="revealed" v-slot:[slotName]="props">
-      <div class="card-header" role="button">
-        <p class="card-header-title tournaments-list">
-          {{ tournament.name }} | {{ category.name }} | {{ subcategory.name }}
-        </p>
-        <a class="card-header-icon">
-          <b-icon :icon="props.open ? 'menu-down' : 'menu-up'"></b-icon>
-        </a>
-      </div>
-    </template>
-    <div v-else class="card-header">
+  <div class="card down">
+    <div class="card-header" @click="toggle">
       <p class="card-header-title tournaments-list">
         {{ tournament.name }} | {{ category.name }} | {{ subcategory.name }}
       </p>
     </div>
-    <div class="card-content has-text-left">
-      <span v-if="revealed" v-html="formatted_text"></span>
-      <PartialText v-else :wordArray="wordArray" :wordsIn="wordsIn"></PartialText>
-    </div>
-    <footer class="card-footer">
-      <div class="card-footer-item answer-container">
-        <b>ANSWER:&nbsp;</b>
-        <span v-if="revealed" v-html="formatted_answer"></span>
+    <slide-up-down :open="open" up down>
+      <div class="card-content has-text-left">
+        <span v-if="revealed" v-html="formatted_text"></span>
+        <PartialText v-else :wordArray="wordArray" :wordsIn="wordsIn"></PartialText>
       </div>
-    </footer>
-  </component>
+      <footer class="card-footer">
+        <div class="card-footer-item answer-container">
+          <b>ANSWER:&nbsp;</b>
+          <span v-if="revealed" v-html="formatted_answer"></span>
+        </div>
+      </footer>
+    </slide-up-down>
+  </div>
 </template>
 
 <script>
-import BCollapse from 'buefy/src/components/collapse/Collapse'
-import BIcon from 'buefy/src/components/icon/Icon'
+// import BCollapse from 'buefy/src/components/collapse/Collapse'
+// import BIcon from 'buefy/src/components/icon/Icon'
+
+import SlideUpDown from './SlideUpDown'
 
 import PartialText from './PartialText'
 
 export default {
   name: 'Question',
+  data () {
+    return {
+      open: true
+    }
+  },
   props: {
     type: {
       type: String,
-      required: true
+      default: ''
     },
     formatted_text: {
       type: String,
-      required: true
+      default: ''
     },
     formatted_answer: {
       type: String,
-      required: true
+      default: ''
     },
     tournament: {
-      type: Object
+      type: Object,
+      default: () => ({})
     },
     category: {
-      type: Object
+      type: Object,
+      default: () => ({})
     },
     subcategory: {
-      type: Object
+      type: Object,
+      default: () => ({})
     },
     number: {
-      type: Number
+      type: Number,
+      default: null
     },
     revealed: {
       type: Boolean,
@@ -68,6 +71,10 @@ export default {
     wordsIn: {
       type: Number,
       default: Infinity
+    },
+    startClosing: {
+      type: Boolean,
+      default: false
     }
   },
   computed: {
@@ -88,10 +95,23 @@ export default {
       }
     }
   },
+  mounted () {
+    if (this.startClosing) {
+      this.$nextTick(() => {
+        this.open = false
+      })
+    }
+  },
+  methods: {
+    toggle () {
+      this.open = !this.open
+    }
+  },
   components: {
     PartialText,
-    BCollapse,
-    BIcon
+    // BCollapse,
+    // BIcon,
+    SlideUpDown
   }
 }
 </script>

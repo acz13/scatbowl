@@ -5,6 +5,7 @@ module.exports = {
     config.resolve.alias
       .set('@shared', path.join(__dirname, '../shared'))
     config.externals('node-fetch', '')
+    config.devtool('source-map')
   },
   devServer: {
     disableHostCheck: true,

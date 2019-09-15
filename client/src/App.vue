@@ -5,6 +5,8 @@
       <router-link to="/public/test">About</router-link>
     </div>
     <router-view/>
+    <div ref="log">
+    </div>
   </div>
 </template>
 
@@ -27,3 +29,9 @@
   }
 }
 </style>
+
+<script>
+export default {
+
+}
+</script>
