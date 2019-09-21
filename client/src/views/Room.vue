@@ -7,24 +7,31 @@
       <b-button @click="nextQuestion">Next Question</b-button>
       <p>Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }}</p>
 
-      <slide-up-down :open="!inTransition" down>
-        <Question
-          :wordsIn="wordsIn"
-          v-bind="currentQuestion || {}"
-          @reachedEnd="finishReading"
-          :revealed="revealAnswer"
-          v-show="!inTransition"
-          :formatted_answer="revealAnswer ? currentQuestion.formatted_answer : ''"
-        ></Question>
-      </slide-up-down>
-      <template v-for="i in Math.min(logLength, 10)">
-        <Question
-          v-bind="questionLog[logLength - i]"
-          :key="logLength - i"
-          revealed
-          startClosing
-        ></Question>
-      </template>
+      <div class="columns">
+        <div class="column is-two-thirds">
+          <slide-up-down :open="!inTransition" down>
+            <Question
+              :wordsIn="wordsIn"
+              v-bind="currentQuestion || {}"
+              @reachedEnd="finishReading"
+              :revealed="revealAnswer"
+              v-show="!inTransition"
+              :formatted_answer="revealAnswer ? currentQuestion.formatted_answer : ''"
+            ></Question>
+          </slide-up-down>
+          <template v-for="i in Math.min(logLength, 10)">
+            <Question
+              v-bind="questionLog[logLength - i]"
+              :key="logLength - i"
+              revealed
+              startClosing
+            ></Question>
+          </template>
+        </div>
+        <div class="column">
+          <settings :searchFilters="searchFilters" v-bind="settings" @changeSettings="changeSettings($event); clearQuestions(); loadQuestions()"></settings>
+        </div>
+      </div>
     </div>
   </section>
 </template>
@@ -37,16 +44,18 @@
 
 <script>
 // import io from 'socket.io-client'
-import { ref, computed } from '@vue/composition-api'
+import { ref, reactive, computed } from '@vue/composition-api'
 
 import BButton from 'buefy/src/components/button/Button'
 
+import Settings from '@/components/Settings'
 import Question from '@/components/Question'
 import SlideUpDown from '@/components/SlideUpDown'
 
 import { useTimer } from '@/hooks/timer'
 
 import quizDBQuestionManager from '@shared/quizDBQuestions'
+import defaultSearchFilters from '@/assets/json/defaultSearchFilters.json'
 
 /**
 const sampleTossup = {
@@ -107,6 +116,32 @@ export default {
     }
   },
   setup (_, { root }) {
+    // Settings
+    const settings = reactive({
+      difficulty: [],
+      category: [],
+      subcategory: []
+    })
+
+    function changeSettings (newSettings) {
+      for (const key in newSettings) {
+        settings[key] = newSettings[key]
+      }
+    }
+
+    const searchFilters = ref(defaultSearchFilters)
+
+    fetch(`/api/filter_options`)
+      .then(r => {
+        return r.json()
+      })
+      .then(filters => {
+        searchFilters.value = filters
+      })
+      .catch(err => {
+        console.log(err + 'Default filters')
+      })
+
     // Question management
     const questionQueue = []
     const questionManager = quizDBQuestionManager
@@ -149,9 +184,9 @@ export default {
       fetchLocked.value = false
 
       if (questionQueue.length === 0) {
-        await loadQuestions()
+        await loadQuestions(settings)
       } else if (questionQueue.length === 1) {
-        loadQuestions() // Background
+        loadQuestions(settings) // Background
       }
 
       if (fetchLocked.value) {
@@ -172,10 +207,8 @@ export default {
       }
 
       window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          inTransition.value = false
-          timer.start()
-        })
+        inTransition.value = false
+        timer.start()
       })
     }
 
@@ -200,6 +233,9 @@ export default {
     nextQuestion().then(() => timer.start())
 
     return {
+      settings,
+      changeSettings,
+      searchFilters,
       wordDelay,
       wordsIn,
       timer,
@@ -210,6 +246,7 @@ export default {
       nextQuestion,
       questionLog,
       clearQuestions,
+      loadQuestions,
       nextLocked,
       inTransition,
       logLength
@@ -250,6 +287,7 @@ export default {
   //   next()
   // },
   components: {
+    Settings,
     Question,
     BButton,
     SlideUpDown

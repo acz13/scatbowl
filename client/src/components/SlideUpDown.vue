@@ -9,7 +9,6 @@
 <style scoped>
 .slide-up-down-enter-active.down, .slide-up-down-leave-active.up {
   transition-duration: var(--duration);
-  box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1), 0 0 0 1px rgba(10, 10, 10, 0.1);
   transition-timing-function: linear;
 }
 
@@ -21,6 +20,13 @@
 .slide-up-down-enter.down, .slide-up-down-leave-to.up {
   overflow: hidden;
   max-height: 0;
+}
+
+* {
+  will-change: max-height;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 </style>
 
@@ -51,7 +57,7 @@ export default {
   },
   computed: {
     duration () {
-      return this.scrollHeight / 200
+      return this.scrollHeight / 1000
     },
     classes () {
       return {
