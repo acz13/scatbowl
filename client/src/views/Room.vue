@@ -9,13 +9,13 @@
 
       <div class="columns">
         <div class="column is-two-thirds">
-          <slide-up-down :open="!inTransition" down>
+          <slide-up-down :open="!inTransition" @enter-cancelled="console.log('hello'); inTransition = true" down>
             <Question
               :wordsIn="wordsIn"
               v-bind="currentQuestion || {}"
               @reachedEnd="finishReading"
               :revealed="revealAnswer"
-              v-show="!inTransition"
+              ref="mainQuestion"
               :formatted_answer="revealAnswer ? currentQuestion.formatted_answer : ''"
             ></Question>
           </slide-up-down>
@@ -206,18 +206,20 @@ export default {
       const oldQuestion = currentQuestion.value
 
       timer.reset()
+
+      inTransition.value = true
+
       currentQuestion.value = questionQueue.pop()
 
       nextLocked.value = false
 
-      inTransition.value = true
-
-      if (oldQuestion) {
-        questionLog.value.push(oldQuestion)
-      }
-
       window.requestAnimationFrame(() => {
         inTransition.value = false
+
+        if (oldQuestion) {
+          questionLog.value.push(oldQuestion)
+        }
+
         timer.start()
       })
     }
@@ -251,7 +253,8 @@ export default {
       loadQuestions,
       nextLocked,
       inTransition,
-      logLength
+      logLength,
+      console
     }
   },
   // created () {

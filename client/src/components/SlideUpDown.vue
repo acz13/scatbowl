@@ -1,5 +1,5 @@
 <template>
-  <transition name="slide-up-down">
+  <transition name="slide-up-down" @enter-cancelled="$emit('enter-cancelled')">
     <div ref="whatever" :class="classes" :style="styles" v-show="visible">
       <slot></slot>
     </div>
@@ -47,6 +47,10 @@ export default {
     down: {
       type: Boolean,
       default: false
+    },
+    wait: {
+      type: Boolean,
+      default: false
     }
   },
   data () {
@@ -79,7 +83,14 @@ export default {
       } else {
         this.scrollHeight = this.$refs.whatever.scrollHeight
       }
-      this.visible = this.open
+
+      if (this.wait) {
+        window.requestAnimationFrame(() => {
+          this.visible = this.open
+        })
+      } else {
+        this.visible = this.open
+      }
       // console.log(this.$refs.container.style.getPropertyValue('--scrollHeight'))
     }
   }
