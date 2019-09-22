@@ -4,86 +4,71 @@
       <p class="card-header-title">Settings</p>
     </div>
     <div class="card-content">
-      <!-- <b-field grouped label="Delay">
+      <b-field grouped label="Delay">
         <b-field expanded>
-          <b-slider v-model="wordDelay" :min="25" :max="500" lazy></b-slider>
+          <b-slider :value="value.wordDelay" @change="$emit('changeSettings', { wordDelay: $event })" :min="25" :max="500" lazy></b-slider>
         </b-field>
-        <b-field>
-          <b-input v-model.lazy="wordDelay" type="number" :min="25" :max="500"></b-input>
-        </b-field>
-      </b-field> -->
-      <!-- <b-field grouped label="WPM">
+        <!-- <b-field>
+          <b-input :value="value.wordDelay" @input="$emit('changeSettings', { wordDelay: $event })" type="number" :min="25" :max="500"></b-input>
+        </b-field> -->
+      </b-field>
+      <b-field grouped label="WPM">
         <b-field expanded>
           <b-slider
-            :value="Math.round(60000 / wordDelay)"
-            @input="wpmInput($event)"
+            :value="Math.round(60000 / value.wordDelay)"
+            @change="$emit('changeSettings', { wordDelay: Math.round(60000 / $event) })"
             :min="120"
             :max="2400"
             lazy
-          >
-            <template v-for="val in 95">
-              <b-slider-tick :value="60000 / (24 + 5 * val)" :key="val">{{ 24 + 5 * val }}</b-slider-tick>
-            </template>
-          </b-slider>
+          ></b-slider>
         </b-field>
-        <b-field>
+        <!-- <b-field>
           <b-input
-            :value="Math.round(60000 / wordDelay)"
-            @change="wpmInput($event)"
+            :value="Math.round(60000 / value.wordDelay)"
+            @input="$emit('changeSettings', { wordDelay: Math.round(60000 / $event) })"
             type="number"
             :min="120"
             :max="2400"
           ></b-input>
-        </b-field>
-      </b-field> -->
-      <b-field label="Difficulty">
-        <b-taginput
-          :value="difficulty"
-          :data="filteredDifficulty"
-          autocomplete
-          openOnFocus
-          field="title"
-          @typing="getFilteredDifficulty"
-          @input="tempDifficulty = $event.map(d => d.name); getFilteredDifficulty('')"
-          @blur="$emit('changeSettings', { difficulty: tempDifficulty })"
-        >
-          <template slot-scope="props">
-            <strong>{{ props.option.number }}</strong> ({{ props.option.title }})
-          </template>
-          <template slot="empty">
-            No difficulties found
-          </template>
-        </b-taginput>
+        </b-field> -->
       </b-field>
-      <b-field label="Category">
+
+      <section>
+        <filter-option
+          :value="value.searchFilters.difficulty"
+          :options="filterOptions.difficulty"
+          idField="name"
+          dispField="title"
+          numberField="number"
+
+          label="Difficulty"
+
+          @input="$emit('changeSearchFilters', { difficulty: $event })"
+        ></filter-option>
+
+        <filter-option
+          :value="value.searchFilters.category"
+          :options="filterOptions.category"
+          idField="id"
+          dispField="name"
+          numberField="id"
+
+          label="Category"
+
+          @input="$emit('changeSearchFilters', { category: $event })"
+        ></filter-option>
+      </section>
+
+      <!-- <b-field label="Subcategory">
         <b-taginput
-          :value="category"
-          :data="filteredCategory"
-          autocomplete
-          openOnFocus
-          field="name"
-          @typing="getFilteredCategory"
-          @input=" tempCategory = $event.map(d => d.id); getFilteredCategory('')"
-          @blur="$emit('changeSettings', { category: tempCategory })"
-        >
-          <template slot-scope="props">
-            <strong>{{ props.option.id }}</strong> ({{ props.option.name }})
-          </template>
-          <template slot="empty">
-            No difficulties found
-          </template>
-        </b-taginput>
-      </b-field>
-      <b-field label="Subcategory">
-        <b-taginput
-          :value="category"
+          :value="subcategoryObjs"
           :data="filteredSubcategory"
           autocomplete
           openOnFocus
           field="name"
           @typing="getFilteredSubcategory"
           @input="tempSubcategory = $event.map(d => d.id); getFilteredSubcategory('')"
-          @blur="$emit('changeSettings', { subcategory: tempSubcategory })"
+          @blur="$emit('changefilterOptions', { subcategory: tempSubcategory })"
         >
           <template slot-scope="props">
             <strong>{{ props.option.id }}</strong> ({{ props.option.name }})
@@ -92,82 +77,35 @@
             No difficulties found
           </template>
         </b-taginput>
-      </b-field>
+      </b-field> -->
     </div>
   </div>
 </template>
 
 <script>
-// import BSlider from 'buefy/src/components/slider/Slider'
-// import BSliderTick from 'buefy/src/components/slider/SliderTick'
-
 import BField from 'buefy/src/components/field/Field'
-import BTaginput from 'buefy/src/components/taginput/Taginput'
+import BSlider from 'buefy/src/components/slider/Slider'
+// import BSliderTick from 'buefy/src/components/slider/SliderTick'
+// import BInput from 'buefy/src/components/input/Input'
 
-function matches (text, target) {
-  return text.length === 0 || target
-    .toString()
-    .toLowerCase()
-    .indexOf(text.toLowerCase()) >= 0
-}
+import FilterOption from './FilterOption'
 
 export default {
   props: {
-    searchFilters: {
-      type: Object
-    },
-    difficulty: {
-      type: Array
-    },
-    category: {
-      type: Array
-    },
-    subcategory: {
-      type: Array
-    }
-  },
-  data () {
-    return {
-      filteredDifficulty: [],
-      tempDifficulty: [],
-      filteredCategory: [],
-      tempCategory: [],
-      filteredSubcategory: [],
-      tempSubcategory: []
-    }
-  },
-  created () {
-    this.filteredDifficulty = this.searchFilters.difficulty.slice()
-    this.filteredCategory = this.searchFilters.category.slice()
-    this.filteredSubcategory = this.searchFilters.category.slice()
+    value: Object,
+    filterOptions: Object
   },
   methods: {
-    getFilteredDifficulty (text) {
-      console.log('Filtering difficulty')
-      this.filteredDifficulty = this.searchFilters.difficulty.filter((option) => {
-        return !this.tempDifficulty.includes(option.name) &&
-          (option.number === parseInt(text) || matches(text, option.title))
-      })
-    },
-    getFilteredCategory (text) {
-      this.filteredCategory = this.searchFilters.category.filter((option) => {
-        return !this.tempCategory.includes(option.id) &&
-          matches(text, option.name)
-      })
-    },
-    getFilteredSubcategory (text) {
-      this.filteredSubcategory = this.searchFilters.subcategory.filter((option) => {
-        return !this.tempSubcategory.includes(option.id) &&
-          (this.tempCategory.length === 0 || this.tempCategory.includes(option.category_id) || this.category.includes(option.category_id)) &&
-          matches(text, option.name)
-      })
+    subcategoryCheck (option) {
+      this.tempCategory.length === 0 || this.tempCategory.includes(option.category_id) || this.category.includes(option.category_id)
     }
   },
   components: {
+    FilterOption,
     BField,
-    BTaginput
-    // BSlider,
-    // BSliderTick
+    BSlider
+    // BSliderTick,
+    // BInput
   }
 }
 </script>
