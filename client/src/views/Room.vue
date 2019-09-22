@@ -5,7 +5,7 @@
       <b-button @click="timer.stop">Stop Reading</b-button>
       <b-button @click="timer.reset">Reset Reading</b-button>
       <b-button @click="nextQuestion">Next Question</b-button>
-      <p>Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }}</p>
+      <p>Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % settings.wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }}</p>
 
       <div class="columns">
         <div class="column is-two-thirds">
@@ -29,7 +29,12 @@
           </template>
         </div>
         <div class="column">
-          <settings :searchFilters="searchFilters" v-bind="settings" @changeSettings="changeSettings($event); clearQuestions(); loadQuestions()"></settings>
+          <settings
+            :value="settings"
+            :filterOptions="filterOptions"
+            @changeSettings="changeSettings"
+            @changeSearchFilters="changeSettings($event, 'searchFilters'); clearQuestions(); loadQuestions()">
+          </settings>
         </div>
       </div>
     </div>
@@ -44,7 +49,7 @@
 
 <script>
 // import io from 'socket.io-client'
-import { ref, reactive, computed } from '@vue/composition-api'
+import { ref, reactive, computed, toRefs } from '@vue/composition-api'
 
 import BButton from 'buefy/src/components/button/Button'
 
@@ -118,25 +123,30 @@ export default {
   setup (_, { root }) {
     // Settings
     const settings = reactive({
-      difficulty: [],
-      category: [],
-      subcategory: []
+      searchFilters: {
+        difficulty: [],
+        category: [],
+        subcategory: []
+      },
+      wordDelay: 25
     })
 
-    function changeSettings (newSettings) {
+    function changeSettings (newSettings, rootKey) {
+      const toChange = rootKey ? settings[rootKey] : settings
+
       for (const key in newSettings) {
-        settings[key] = newSettings[key]
+        toChange[key] = newSettings[key]
       }
     }
 
-    const searchFilters = ref(defaultSearchFilters)
+    const filterOptions = ref(defaultSearchFilters)
 
     fetch(`/api/filter_options`)
       .then(r => {
         return r.json()
       })
       .then(filters => {
-        searchFilters.value = filters
+        filterOptions.value = filters
       })
       .catch(err => {
         console.log(err + 'Default filters')
@@ -213,17 +223,11 @@ export default {
     }
 
     // Timer and Reading
-    const wordDelay = ref(25)
-
-    const { ticks: wordsIn, ...timer } = useTimer(wordDelay, true)
+    const { ticks: wordsIn, ...timer } = useTimer(toRefs(settings).wordDelay, true)
 
     function finishReading () {
       timer.stop()
       wordsIn.value = Infinity
-    }
-
-    function wpmInput (wpm) {
-      wordDelay.value = Math.round(60000 / wpm)
     }
 
     const revealAnswer = computed(() => {
@@ -235,12 +239,10 @@ export default {
     return {
       settings,
       changeSettings,
-      searchFilters,
-      wordDelay,
+      filterOptions,
       wordsIn,
       timer,
       finishReading,
-      wpmInput,
       revealAnswer,
       currentQuestion,
       nextQuestion,
