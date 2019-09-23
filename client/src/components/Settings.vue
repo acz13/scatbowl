@@ -35,7 +35,7 @@
 
       <section>
         <filter-option
-          :value="value.searchFilters.difficulty"
+          :value="tempSearchFilters.difficulty"
           :options="filterOptions.difficulty"
           idField="name"
           dispField="title"
@@ -43,11 +43,11 @@
 
           label="Difficulty"
 
-          @input="$emit('changeSearchFilters', { difficulty: $event })"
+          @input="searchFiltersChanged = true; tempSearchFilters.difficulty = $event"
         ></filter-option>
 
         <filter-option
-          :value="value.searchFilters.category"
+          :value="tempSearchFilters.category"
           :options="filterOptions.category"
           idField="id"
           dispField="name"
@@ -55,8 +55,12 @@
 
           label="Category"
 
-          @input="$emit('changeSearchFilters', { category: $event })"
+          @input="searchFiltersChanged = true; tempSearchFilters.category = $event"
         ></filter-option>
+
+        <b-button v-show="searchFiltersChanged" @click="searchFiltersChanged = false; $emit('changeSearchFilters', tempSearchFilters)">
+          Apply
+        </b-button>
       </section>
 
       <!-- <b-field label="Subcategory">
@@ -85,6 +89,8 @@
 <script>
 import BField from 'buefy/src/components/field/Field'
 import BSlider from 'buefy/src/components/slider/Slider'
+import BButton from 'buefy/src/components/button/Button'
+
 // import BSliderTick from 'buefy/src/components/slider/SliderTick'
 // import BInput from 'buefy/src/components/input/Input'
 
@@ -95,6 +101,18 @@ export default {
     value: Object,
     filterOptions: Object
   },
+  data () {
+    return {
+      searchFiltersChanged: false,
+      tempSearchFilters: this.value.searchFilters
+    }
+  },
+  watch: {
+    value () {
+      this.tempSearchFilters = this.value.searchFilters
+      this.searchFiltersChanged = true
+    }
+  },
   methods: {
     subcategoryCheck (option) {
       this.tempCategory.length === 0 || this.tempCategory.includes(option.category_id) || this.category.includes(option.category_id)
@@ -103,7 +121,8 @@ export default {
   components: {
     FilterOption,
     BField,
-    BSlider
+    BSlider,
+    BButton
     // BSliderTick,
     // BInput
   }

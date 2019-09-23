@@ -2,23 +2,27 @@
   <section class="room section">
     <div class="container">
       <b-button @click="timer.start">Start Reading</b-button>
-      <b-button @click="timer.stop">Stop Reading</b-button>
-      <b-button @click="timer.reset">Reset Reading</b-button>
+      <b-button @click="handleBuzz">Buzz</b-button>
+      <b-button @click="resetReading">Reset Reading</b-button>
       <b-button @click="nextQuestion">Next Question</b-button>
       <p>Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % settings.wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }}</p>
 
       <div class="columns">
         <div class="column is-two-thirds">
-          <slide-up-down :open="!inTransition" @enter-cancelled="console.log('hello'); inTransition = true" down>
-            <Question
-              :wordsIn="wordsIn"
-              v-bind="currentQuestion || {}"
-              @reachedEnd="finishReading"
-              :revealed="revealAnswer"
-              ref="mainQuestion"
-              :formatted_answer="revealAnswer ? currentQuestion.formatted_answer : ''"
-            ></Question>
-          </slide-up-down>
+          <div tabindex="0" @keydown.space="handleBuzz" @keyup.n="nextQuestion">
+            <slide-up-down :open="!inTransition" @enter-cancelled="inTransition = true" down>
+              <Question
+                :wordsIn="wordsIn"
+                v-bind="currentQuestion || {}"
+                @reachedEnd="finishReading"
+                :revealed="readingState.revealed"
+                ref="mainQuestion"
+                :formatted_answer="readingState.revealed ? currentQuestion.formatted_answer : ''"
+                @keydown.space="handleBuzz"
+                @keydown.n="nextQuestion"
+              ></Question>
+            </slide-up-down>
+          </div>
           <template v-for="i in Math.min(logLength, 10)">
             <Question
               v-bind="questionLog[logLength - i]"
@@ -152,6 +156,32 @@ export default {
         console.log(err + 'Default filters')
       })
 
+    // Buzzing
+    const readingState = reactive({
+      buzzing: false,
+      paused: false,
+      revealed: false
+    })
+
+    function resetReading () {
+      timer.reset()
+      readingState.buzzing = false
+      readingState.revealed = false
+    }
+
+    function handleBuzz (event) {
+      if (event) {
+        event.preventDefault()
+      }
+
+      if (readingState.buzzing) {
+        readingState.revealed = true
+      } else {
+        readingState.buzzing = true
+        timer.stop()
+      }
+    }
+
     // Question management
     const questionQueue = []
     const questionManager = quizDBQuestionManager
@@ -209,6 +239,7 @@ export default {
 
       inTransition.value = true
 
+      resetReading()
       currentQuestion.value = questionQueue.pop()
 
       nextLocked.value = false
@@ -232,10 +263,6 @@ export default {
       wordsIn.value = Infinity
     }
 
-    const revealAnswer = computed(() => {
-      return wordsIn.value === Number.POSITIVE_INFINITY
-    })
-
     nextQuestion().then(() => timer.start())
 
     return {
@@ -245,7 +272,6 @@ export default {
       wordsIn,
       timer,
       finishReading,
-      revealAnswer,
       currentQuestion,
       nextQuestion,
       questionLog,
@@ -254,7 +280,9 @@ export default {
       nextLocked,
       inTransition,
       logLength,
-      console
+      readingState,
+      resetReading,
+      handleBuzz
     }
   },
   // created () {
