@@ -6,7 +6,7 @@
       </p>
     </div>
     <slide-up-down :open="open" up down>
-      <div class="card-content has-text-left">
+      <div class="card-content has-background-light has-text-left">
         <span v-if="revealed" v-html="formatted_text"></span>
         <PartialText v-else :wordArray="wordArray" :wordsIn="wordsIn"></PartialText>
       </div>

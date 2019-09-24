@@ -41,7 +41,8 @@ export default {
     dispField: String,
     numberField: String,
     extraCondition: Function,
-    label: String
+    label: String,
+    watched: Array
   },
   setup (props) {
     const optionsMap = computed(() => {
@@ -62,10 +63,12 @@ export default {
     })
 
     function getFilteredOptions (text) {
+      text = typeof text === 'string' ? text : ''
+
       filteredOptions.value = props.options.filter((option) => {
         return !temp.value.includes(option[props.idField]) &&
           (option[props.numberField] === parseInt(text) || matches(text, option[props.dispField])) &&
-          (props.extraCondition ? props.extraCondition(option) : true)
+          props.extraCondition(option)
       })
     }
 

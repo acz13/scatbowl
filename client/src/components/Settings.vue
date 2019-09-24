@@ -41,6 +41,8 @@
           dispField="title"
           numberField="number"
 
+          :extraCondition="() => true"
+
           label="Difficulty"
 
           @input="searchFiltersChanged = true; tempSearchFilters.difficulty = $event"
@@ -53,35 +55,32 @@
           dispField="name"
           numberField="id"
 
+          :extraCondition="() => true"
+
           label="Category"
 
           @input="searchFiltersChanged = true; tempSearchFilters.category = $event"
+        ></filter-option>
+
+        <filter-option
+          :value="tempSearchFilters.subcategory"
+          :options="filterOptions.subcategory"
+          idField="id"
+          dispField="name"
+          numberField="id"
+
+          :watched="tempSearchFilters.category"
+          :extraCondition="subcategoryCheck"
+
+          label="Subcategory"
+
+          @input="searchFiltersChanged = true; tempSearchFilters.subcategory = $event"
         ></filter-option>
 
         <b-button v-show="searchFiltersChanged" @click="searchFiltersChanged = false; $emit('changeSearchFilters', tempSearchFilters)">
           Apply
         </b-button>
       </section>
-
-      <!-- <b-field label="Subcategory">
-        <b-taginput
-          :value="subcategoryObjs"
-          :data="filteredSubcategory"
-          autocomplete
-          openOnFocus
-          field="name"
-          @typing="getFilteredSubcategory"
-          @input="tempSubcategory = $event.map(d => d.id); getFilteredSubcategory('')"
-          @blur="$emit('changefilterOptions', { subcategory: tempSubcategory })"
-        >
-          <template slot-scope="props">
-            <strong>{{ props.option.id }}</strong> ({{ props.option.name }})
-          </template>
-          <template slot="empty">
-            No difficulties found
-          </template>
-        </b-taginput>
-      </b-field> -->
     </div>
   </div>
 </template>
@@ -115,7 +114,8 @@ export default {
   },
   methods: {
     subcategoryCheck (option) {
-      this.tempCategory.length === 0 || this.tempCategory.includes(option.category_id) || this.category.includes(option.category_id)
+      return this.tempSearchFilters.category.length === 0 ||
+        this.tempSearchFilters.category.includes(option.category_id)
     }
   },
   components: {
