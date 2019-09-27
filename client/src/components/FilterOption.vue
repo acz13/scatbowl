@@ -53,8 +53,6 @@ export default {
       return props.value.map(id => optionsMap.value[id])
     })
 
-    console.log(optionsMap)
-
     const filteredOptions = ref(props.options.slice())
     const temp = ref([])
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="card down">
+  <div class="question card down">
     <div class="card-header" @click="toggle">
       <p class="card-header-title tournaments-list">
         {{ tournament.name }} | {{ category.name }} | {{ subcategory.name }}
