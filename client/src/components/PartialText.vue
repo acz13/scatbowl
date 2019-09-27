@@ -1,3 +1,8 @@
+<!--
+Updating this component so often is too slow.
+should manipulate the DOM directly from JS instead of using Vue for this case.
+-->
+
 <template functional>
   <span>
     <template v-for="i in props.wordArray.length">

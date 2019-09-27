@@ -1,6 +1,6 @@
 <template>
   <transition name="slide-up-down" @enter-cancelled="$emit('enter-cancelled')">
-    <div ref="whatever" :class="classes" :style="styles" v-show="visible">
+    <div class="slide-content" ref="content" :class="classes" :style="styles" v-show="visible">
       <slot></slot>
     </div>
   </transition>
@@ -22,7 +22,7 @@
   max-height: 0;
 }
 
-* {
+.slide-content {
   will-change: max-height;
   transform: translateZ(0);
   backface-visibility: hidden;
@@ -81,7 +81,7 @@ export default {
       if (this.open) {
         this.scrollHeight = this.scrollHeight + 100
       } else {
-        this.scrollHeight = this.$refs.whatever.scrollHeight
+        this.scrollHeight = this.$refs.content.scrollHeight
       }
 
       if (this.wait) {

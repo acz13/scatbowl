@@ -21,6 +21,8 @@
 </template>
 
 <script>
+// This component should be changed to fit the composition api
+
 // import BCollapse from 'buefy/src/components/collapse/Collapse'
 // import BIcon from 'buefy/src/components/icon/Icon'
 
