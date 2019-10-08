@@ -36,6 +36,10 @@ export default {
     open: {
       type: Boolean
     },
+    startOpening: {
+      type: Boolean,
+      default: false
+    },
     startClosing: {
       type: Boolean,
       default: false
@@ -48,14 +52,13 @@ export default {
       type: Boolean,
       default: false
     },
-    wait: {
-      type: Boolean,
-      default: false
+    context: {
+      type: String
     }
   },
   data () {
     return {
-      visible: true,
+      visible: (!this.open && this.startClosing) || (this.open && !this.startOpening),
       scrollHeight: '0px'
     }
   },
@@ -71,9 +74,31 @@ export default {
     },
     styles () {
       return {
-        '--scrollHeight': (this.scrollHeight ? this.scrollHeight : 0) + 'px',
+        '--scrollHeight': (this.scrollHeight || 0) + 'px',
         '--duration': this.duration + 's'
       }
+    }
+  },
+  created () {
+    if (this.context) {
+      console.log(this.context, this.visible, this.open)
+    }
+  },
+  mounted () {
+    if (this.startClosing) {
+      this.scrollHeight = this.$refs.content.scrollHeight
+
+      this.$nextTick(() => {
+        this.visible = false
+      })
+    }
+
+    if (this.startOpening) {
+      this.scrollHeight = 300
+
+      this.$nextTick(() => {
+        this.visible = true
+      })
     }
   },
   watch: {
@@ -84,13 +109,8 @@ export default {
         this.scrollHeight = this.$refs.content.scrollHeight
       }
 
-      if (this.wait) {
-        window.requestAnimationFrame(() => {
-          this.visible = this.open
-        })
-      } else {
-        this.visible = this.open
-      }
+      this.visible = this.open
+
       // console.log(this.$refs.container.style.getPropertyValue('--scrollHeight'))
     }
   }

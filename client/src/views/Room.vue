@@ -9,7 +9,7 @@
 
       <div class="columns">
         <div class="column is-two-thirds">
-          <div tabindex="0" @keydown.space="handleBuzz" @keyup.n="dispNextQuestion">
+          <!-- <div tabindex="0" @keydown.space="handleBuzz" @keyup.n="dispNextQuestion">
             <slide-up-down :open="!inTransition" @enter-cancelled="inTransition = true" down class="mainQuestion">
               <Question
                 :wordsIn="wordsIn"
@@ -22,18 +22,36 @@
                 @keydown.n="dispNextQuestion"
               ></Question>
             </slide-up-down>
-          </div>
+          </div>-->
           <div class="log">
-            <template v-for="i in Math.min(logLength, 10)">
-              <component
-                :is="questionLog[logLength - i].component"
+            <div class="log-item" :key="currentQuestion ? currentQuestion.order_id : 'blank'">
+              <slide-up-down up down open startOpening context="mainQuestion">
+                {{ currentQuestion ? currentQuestion.order_id : '' }}
+                <Question
+                  :wordsIn="wordsIn"
+                  v-bind="currentQuestion || {}"
+                  @reachedEnd="finishReading"
+                  :revealed="readingState.revealed"
+                  ref="mainQuestion"
+                  :formatted_answer="readingState.revealed ? currentQuestion.formatted_answer : ''"
+                  @keydown.space="handleBuzz"
+                  @keydown.n="dispNextQuestion"
+                  startOpening
+                ></Question>
+              </slide-up-down>
+            </div>
+            <div
+              class="log-item"
+              v-for="i in Math.min(logLength, 5)"
+              :key="questionLog[logLength - i].order_id"
+            >
+              {{ questionLog[logLength - i].order_id }}
+              <Question
                 v-bind="questionLog[logLength - i]"
-                :key="logLength - i"
-                class="logItem"
                 revealed
                 startClosing
-              ></component>
-            </template>
+              ></Question>
+            </div>
           </div>
         </div>
         <div class="column">
@@ -41,8 +59,8 @@
             :value="settings"
             :filterOptions="filterOptions"
             @changeSettings="changeSettings"
-            @changeSearchFilters="changeSearchFilters($event)">
-          </settings>
+            @changeSearchFilters="changeSearchFilters($event)"
+          ></settings>
         </div>
       </div>
     </div>
@@ -50,22 +68,22 @@
 </template>
 
 <style scoped>
-  .mainQuestion {
-    margin-bottom: 1rem
-  }
+.mainQuestion {
+  /* margin-bottom: 1rem */
+}
 
-  .log >>> .logItem {
-    margin-bottom: 0.3rem;
-  }
+.log-item {
+  margin-top: 3rem;
+  display: block;
+}
 </style>
 
 <script>
-// import io from 'socket.io-client'
 import { ref, computed } from '@vue/composition-api'
 
 import BButton from 'buefy/src/components/button/Button'
 
-import Message from '@/components/Message'
+// import Message from '@/components/Message'
 import Settings from '@/components/Settings'
 import Question from '@/components/Question'
 import SlideUpDown from '@/components/SlideUpDown'
@@ -136,8 +154,8 @@ export default {
         nextLocked.value = false
 
         if (oldQuestion) {
-          questionLog.value.push({ component: 'Question', ...oldQuestion })
-          questionLog.value.push({ component: 'Message', message: 'hello' })
+          questionLog.value.push(oldQuestion)
+          // questionLog.value.push({ component: 'Message', message: 'hello' })
         }
 
         timer.start()
@@ -203,7 +221,7 @@ export default {
   //   next()
   // },
   components: {
-    Message,
+    // Message,
     Settings,
     Question,
     BButton,

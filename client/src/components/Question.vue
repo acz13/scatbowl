@@ -5,7 +5,7 @@
         {{ tournament.name }} | {{ category.name }} | {{ subcategory.name }}
       </p>
     </div>
-    <slide-up-down :open="open" up down>
+    <slide-up-down :open="open" :startClosing="startClosing" up down context="question">
       <div class="card-content has-background-light has-text-left">
         <span v-if="revealed" v-html="formatted_text"></span>
         <PartialText v-else :wordArray="wordArray" :wordsIn="wordsIn"></PartialText>
@@ -34,7 +34,7 @@ export default {
   name: 'Question',
   data () {
     return {
-      open: true
+      open: !this.startClosing
     }
   },
   props: {
@@ -95,13 +95,6 @@ export default {
       if (this.wordsIn >= this.wordArray.length) {
         this.$emit('reachedEnd')
       }
-    }
-  },
-  mounted () {
-    if (this.startClosing) {
-      this.$nextTick(() => {
-        this.open = false
-      })
     }
   },
   methods: {

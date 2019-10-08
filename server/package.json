@@ -5,6 +5,7 @@
   "main": "server-new.js",
   "scripts": {
     "start": "node -r dotenv/config server-new.js",
+    "proxy": "node proxy.js",
     "lint": "standard",
     "lintfix": "standard --fix",
     "watch": "nodemon --exec npm start"

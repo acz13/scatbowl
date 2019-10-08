@@ -1,3 +1,13 @@
+function makeid (length) {
+  var result = ''
+  var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  var charactersLength = characters.length
+  for (var i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength))
+  }
+  return result
+}
+
 // eventually this will be replaced with a function to search for the question
 function fetchRandomTossups () {
   return new Promise((resolve, reject) => {
@@ -9,9 +19,11 @@ function fetchRandomTossups () {
     setTimeout(() => resolve([{
       type: 'tossup',
       text: genText,
+      formatted_text: genText,
       answer: genAnswer,
-      category: genCategory,
-      subcategory: genSubcategory
+      category: { name: genCategory },
+      subcategory: { name: genSubcategory },
+      order_id: makeid(4)
     }]), 250)
   })
 }
@@ -32,8 +44,8 @@ function fetchRandomBonuses () {
       type: 'bonus',
       leadin: genLeadin,
       parts: parts,
-      category: genCategory,
-      subcategory: genSubcategory
+      category: { name: genCategory },
+      subcategory: { name: genSubcategory }
     }]), 250)
   })
 }
