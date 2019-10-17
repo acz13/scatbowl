@@ -57,11 +57,11 @@
             </div>
             <div
               class="log-item"
-              v-for="i in Math.min(logLength, 5)"
-              :key="questionLog[logLength - i].order_id"
+              v-for="question in questionLog"
+              :key="question.order_id"
             >
               <Question
-                v-bind="questionLog[logLength - i]"
+                v-bind="question"
                 revealed
                 startClosing
               ></Question>
@@ -190,10 +190,10 @@ export default {
         nextLocked.value = false
 
         if (oldQuestion) {
-          if (questionLog.length >= 5) {
-            questionLog.shift()
+          if (questionLog.value.length >= 5) {
+            questionLog.value.pop()
           }
-          questionLog.value.push(oldQuestion)
+          questionLog.value.unshift(oldQuestion)
           // questionLog.value.push({ component: 'Message', message: 'hello' })
         }
 

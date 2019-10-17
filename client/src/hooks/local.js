@@ -17,7 +17,7 @@ export function localRoom () {
       category: [],
       subcategory: []
     },
-    wordDelay: 25
+    wordDelay: 75
   })
 
   function changeSettings (newSettings, rootKey) {
