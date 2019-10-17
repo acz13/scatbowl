@@ -6,8 +6,9 @@
       autocomplete
       openOnFocus
       :field="dispField"
-      @typing="getFilteredOptions"
+      @typing="currentText = $event; getFilteredOptions($event)"
       @input="temp = $event.map(d => d[idField]); getFilteredOptions(''); $emit('input', temp)"
+      @focus="getFilteredOptions(currentText)"
     >
       <template slot-scope="props">
         <strong>{{ props.option[numberField] }}</strong> ({{ props.option[dispField] }})
@@ -70,11 +71,14 @@ export default {
       })
     }
 
+    const currentText = ref('')
+
     return {
       objValue,
       filteredOptions,
       temp,
-      getFilteredOptions
+      getFilteredOptions,
+      currentText
     }
   },
   components: {

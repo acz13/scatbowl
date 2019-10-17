@@ -7,9 +7,12 @@
 </template>
 
 <style scoped>
-.slide-up-down-enter-active.down, .slide-up-down-leave-active.up {
-  transition-duration: var(--duration);
-  transition-timing-function: linear;
+.slide-up-down-leave-active.up {
+  transition: all var(--duration) cubic-bezier(.02, .01, .47, 1);
+}
+
+.slide-up-down-enter-active.down {
+  transition: all var(--duration) cubic-bezier(.02, .01, .47, 1);
 }
 
 .slide-up-down-enter-to.down, .slide-up-down-leave.up {
@@ -24,9 +27,7 @@
 
 .slide-content {
   will-change: max-height;
-  transform: translateZ(0);
   backface-visibility: hidden;
-  perspective: 1000px;
 }
 </style>
 
@@ -59,12 +60,12 @@ export default {
   data () {
     return {
       visible: (!this.open && this.startClosing) || (this.open && !this.startOpening),
-      scrollHeight: '0px'
+      scrollHeight: 0
     }
   },
   computed: {
     duration () {
-      return this.scrollHeight / 1000
+      return 400
     },
     classes () {
       return {
@@ -75,22 +76,17 @@ export default {
     styles () {
       return {
         '--scrollHeight': (this.scrollHeight || 0) + 'px',
-        '--duration': this.duration + 's'
+        '--duration': this.duration + 'ms'
       }
-    }
-  },
-  created () {
-    if (this.context) {
-      console.log(this.context, this.visible, this.open)
     }
   },
   mounted () {
     if (this.startClosing) {
       this.scrollHeight = this.$refs.content.scrollHeight
 
-      this.$nextTick(() => {
-        this.visible = false
-      })
+      // this.$nextTick(() => {
+      this.visible = false
+      // })
     }
 
     if (this.startOpening) {
@@ -104,7 +100,7 @@ export default {
   watch: {
     open () {
       if (this.open) {
-        this.scrollHeight = this.scrollHeight + 100
+        // this.scrollHeight = this.scrollHeight
       } else {
         this.scrollHeight = this.$refs.content.scrollHeight
       }

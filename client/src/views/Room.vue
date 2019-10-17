@@ -1,12 +1,6 @@
 <template>
   <section class="room section">
     <div class="container">
-      <b-button @click="timer.start">Start Reading</b-button>
-      <b-button @click="handleBuzz">Buzz</b-button>
-      <b-button @click="resetReading">Reset Reading</b-button>
-      <b-button @click="dispNextQuestion">Next Question</b-button>
-      <p>Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % settings.wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }}</p>
-
       <div class="columns">
         <div class="column is-two-thirds">
           <!-- <div tabindex="0" @keydown.space="handleBuzz" @keyup.n="dispNextQuestion">
@@ -23,19 +17,40 @@
               ></Question>
             </slide-up-down>
           </div>-->
+          <p>Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % settings.wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }}</p>
+
+          <transition-group name="fade" mode="out-in">
+            <b-field v-show="readingState.buzzing" expanded key="inputs" class="controlfield">
+              <b-input
+                style="margin-bottom: 0"
+                expanded
+                ref="submitInput"
+                v-model="toSubmit"
+                @keydown.native.stop @keyup.native.stop
+                @keyup.native.enter.stop="handleSubmit"
+              ></b-input>
+              <p class="control">
+                <button class="button is-danger" @click="handleSubmit">Buzz</button>
+              </p>
+            </b-field>
+            <b-field v-show="!readingState.buzzing" key="buttons" class="controlfield">
+              <b-button @click="timer.start">Start Reading</b-button>
+              <b-button @click="handleSpace">Buzz</b-button>
+              <b-button @click="resetReading">Reset Reading</b-button>
+              <b-button @click="dispNextQuestion">Next Question</b-button>
+            </b-field>
+          </transition-group>
+
           <div class="log">
-            <div class="log-item" :key="currentQuestion ? currentQuestion.order_id : 'blank'">
+            <div :key="currentQuestion ? currentQuestion.order_id : 'blank'">
               <slide-up-down up down open startOpening context="mainQuestion">
-                {{ currentQuestion ? currentQuestion.order_id : '' }}
                 <Question
                   :wordsIn="wordsIn"
                   v-bind="currentQuestion || {}"
-                  @reachedEnd="finishReading"
+                  @reachedEnd="timer.stop"
                   :revealed="readingState.revealed"
                   ref="mainQuestion"
                   :formatted_answer="readingState.revealed ? currentQuestion.formatted_answer : ''"
-                  @keydown.space="handleBuzz"
-                  @keydown.n="dispNextQuestion"
                   startOpening
                 ></Question>
               </slide-up-down>
@@ -45,7 +60,6 @@
               v-for="i in Math.min(logLength, 5)"
               :key="questionLog[logLength - i].order_id"
             >
-              {{ questionLog[logLength - i].order_id }}
               <Question
                 v-bind="questionLog[logLength - i]"
                 revealed
@@ -68,6 +82,22 @@
 </template>
 
 <style scoped>
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.2s;
+}
+
+.fade-leave-active {
+  position: absolute;
+}
+
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}
+
+.controlfield {
+  margin-bottom: 0.75rem;
+}
+
 .mainQuestion {
   /* margin-bottom: 1rem */
 }
@@ -76,12 +106,15 @@
   margin-top: 3rem;
   display: block;
 }
+
 </style>
 
 <script>
-import { ref, computed } from '@vue/composition-api'
+import { ref, computed, onMounted } from '@vue/composition-api'
 
 import BButton from 'buefy/src/components/button/Button'
+import BField from 'buefy/src/components/field/Field'
+import BInput from 'buefy/src/components/input/Input'
 
 // import Message from '@/components/Message'
 import Settings from '@/components/Settings'
@@ -89,6 +122,7 @@ import Question from '@/components/Question'
 import SlideUpDown from '@/components/SlideUpDown'
 
 import { localRoom } from '@/hooks/local'
+import { useGlobalKeys } from '@/hooks/globalKeys'
 
 export default {
   props: {
@@ -105,7 +139,6 @@ export default {
       filterOptions,
 
       readingState,
-      handleBuzz,
 
       nextQuestion,
 
@@ -113,7 +146,10 @@ export default {
       timer,
 
       finishReading,
-      resetReading
+      resetReading,
+
+      buzz,
+      submitAnswer
     } = localRoom()
 
     const questionLog = ref([])
@@ -154,6 +190,9 @@ export default {
         nextLocked.value = false
 
         if (oldQuestion) {
+          if (questionLog.length >= 5) {
+            questionLog.shift()
+          }
           questionLog.value.push(oldQuestion)
           // questionLog.value.push({ component: 'Message', message: 'hello' })
         }
@@ -161,6 +200,43 @@ export default {
         timer.start()
       })
     }
+
+    const submitInput = ref(null)
+    const toSubmit = ref('')
+    let inputEl
+
+    onMounted(() => {
+      inputEl = submitInput.value.$el.querySelector('input')
+    })
+
+    async function handleSpace (event) {
+      event.preventDefault()
+
+      if (!readingState.buzzing) {
+        await buzz()
+
+        inputEl.focus()
+      }
+    }
+
+    async function handleSubmit (event) {
+      event.preventDefault()
+
+      const result = await submitAnswer(toSubmit.value, currentQuestion.value)
+
+      console.log(result)
+
+      toSubmit.value = ''
+    }
+
+    useGlobalKeys({
+      keyup: {
+        n: dispNextQuestion
+      },
+      keydown: {
+        ' ': handleSpace
+      }
+    })
 
     dispNextQuestion().then(() => timer.start())
 
@@ -171,7 +247,6 @@ export default {
       filterOptions,
 
       readingState,
-      handleBuzz,
 
       questionLog,
       logLength,
@@ -183,7 +258,14 @@ export default {
       timer,
 
       finishReading,
-      resetReading
+      resetReading,
+
+      toSubmit,
+      submitInput,
+      handleSpace,
+      handleSubmit,
+
+      console
     }
   },
   // created () {
@@ -225,6 +307,8 @@ export default {
     Settings,
     Question,
     BButton,
+    BField,
+    BInput,
     SlideUpDown
   }
 }

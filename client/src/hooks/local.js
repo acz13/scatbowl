@@ -5,6 +5,8 @@ import { reactive, ref, toRefs } from '@vue/composition-api'
 import quizDBQuestionManager from '@shared/quizDBQuestions'
 import defaultSearchFilters from '@/assets/json/defaultSearchFilters.json'
 
+import checkCorrect from '@shared/answerChecking'
+
 import { useTimer } from '@/hooks/timer'
 
 export function localRoom () {
@@ -47,26 +49,6 @@ export function localRoom () {
     .catch(err => {
       console.log(err + 'Using default filters')
     })
-
-  // Buzzing
-  const readingState = reactive({
-    buzzing: false,
-    paused: false,
-    revealed: false
-  })
-
-  function handleBuzz (event) {
-    if (event) {
-      event.preventDefault()
-    }
-
-    if (readingState.buzzing) {
-      readingState.revealed = true
-    } else {
-      readingState.buzzing = true
-      timer.stop()
-    }
-  }
 
   // Question management
   const questionQueue = []
@@ -111,11 +93,21 @@ export function localRoom () {
     return questionQueue.pop()
   }
 
+  // Buzzing
+  const readingState = reactive({
+    buzzing: false,
+    paused: false,
+    revealed: false
+  })
+
   // Timer and Reading
   const { ticks: wordsIn, ...timer } = useTimer(toRefs(settings).wordDelay, true)
 
   function finishReading () {
     timer.stop()
+    readingState.revealed = true
+    readingState.buzzing = false
+
     wordsIn.value = Infinity
   }
 
@@ -125,6 +117,20 @@ export function localRoom () {
     readingState.revealed = false
   }
 
+  async function buzz () {
+    readingState.buzzing = true
+    timer.stop()
+  }
+
+  async function submitAnswer (submitted, question) {
+    const result = checkCorrect(submitted, question.formatted_answer, question.formatted_text, wordsIn.value)
+
+    readingState.buzzing = false
+    finishReading()
+
+    return result
+  }
+
   return {
     settings,
     changeSettings,
@@ -132,7 +138,6 @@ export function localRoom () {
     filterOptions,
 
     readingState,
-    handleBuzz,
 
     nextQuestion,
 
@@ -140,6 +145,9 @@ export function localRoom () {
     timer,
 
     finishReading,
-    resetReading
+    resetReading,
+
+    buzz,
+    submitAnswer
   }
 }

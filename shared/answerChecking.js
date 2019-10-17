@@ -12,7 +12,7 @@ function wordInAnswer (word, list, allowAbrev) {
   }))
 }
 
-function checkCorrect (submitted, actual, displayedText, questionText) {
+function checkCorrect (submitted, actual, questionText, wordsIn) {
   const [promptList, noAcceptList, acceptList, boldedAnswer, mistakesPromptList, mistakesNoAcceptList, mistakesAcceptList] = setAnswerInfo(actual)
   // do preliminary tests -- allows for finding anomalies like "the invisible man" vs "invisible man", they're slightly less accurate but should be fine
   const distances = [].concat(...[mistakesPromptList, mistakesNoAcceptList, mistakesAcceptList]).map(elem => distance(submitted, elem))
@@ -38,7 +38,8 @@ function checkCorrect (submitted, actual, displayedText, questionText) {
     }
   }
 
-  displayedText = fixAnswer(displayedText).split(' ')
+
+  const displayedText = fixAnswer(questionText).split(/\s/g).slice(0, wordsIn)
   // displayedText=displayedText.split(" ");
   questionText = questionText.toLowerCase()
 

@@ -92,7 +92,7 @@ export default {
   },
   watch: {
     wordsIn () {
-      if (this.wordsIn >= this.wordArray.length) {
+      if (this.wordsIn > this.wordArray.length) {
         this.$emit('reachedEnd')
       }
     }

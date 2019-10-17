@@ -173,7 +173,7 @@ class Game { // Move to this client side eventually
     // const displayedText (Should we calculate this server side?)
     const displayedText = ''
     const power = false
-    const result = checkCorrect(answer, this.currentQuestion.answer, displayedText, this.currentQuestion.text /*, this.currentQuestion.category */)
+    const result = checkCorrect(answer, this.currentQuestion.formatted_answer, this.currentQuestion.formatted_text, 0 /*, this.currentQuestion.category */)
 
     this.emit('answerSubmitted', { answer: answer, result: result })
 
