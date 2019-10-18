@@ -2,7 +2,7 @@
 
 import { reactive, ref, toRefs } from '@vue/composition-api'
 
-import quizDBQuestionManager from '@shared/quizDBQuestions'
+import * as quizDBQuestionManager from '@shared/quizDBQuestions'
 import defaultSearchFilters from '@/assets/json/defaultSearchFilters.json'
 
 import checkCorrect from '@shared/answerChecking'
