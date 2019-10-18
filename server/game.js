@@ -1,12 +1,12 @@
-const schemas = require('./config/schemas')
+import schemas from './config/schemas'
 // const pool = require('./db/pool')
 // const { sql } = require('slonik')
 // const redis = require('./db/redis')
-const quizDBQuestionManager = require('../shared/quizDBQuestions')
-const dbQuestionManager = require('./util/dbQuestions')
-const checkCorrect = require('../shared/answerChecking')
-const filterByProps = require('./util/filterByProps')
-const { cleanString } = require('./util/sanitize')
+import quizDBQuestionManager from '../shared/quizDBQuestions'
+import dbQuestionManager from './util/dbQuestions'
+import checkCorrect from '../shared/answerChecking'
+import filterByProps from './util/filterByProps'
+import { cleanString } from './util/sanitize'
 
 // The `Game` class is socket-independent... not sure if the bound emit method
 // is ideal or we should just return promises with objects from everything

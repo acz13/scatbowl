@@ -1,11 +1,3 @@
-Object.defineProperty(Array.prototype, 'flat', {
-  value: function (depth = 1) {
-    return this.reduce(function (flat, toFlatten) {
-      return flat.concat((Array.isArray(toFlatten) && (depth > 1)) ? toFlatten.flat(depth - 1) : toFlatten)
-    }, [])
-  }
-})
-
 function wordInAnswer (word, list, allowAbrev) {
   return (list.some(elem => {
     return (distance(word, elem, allowAbrev) > 0.85)
@@ -13,7 +5,8 @@ function wordInAnswer (word, list, allowAbrev) {
 }
 
 function checkCorrect (submitted, actual, questionText, wordsIn) {
-  const [promptList, noAcceptList, acceptList, boldedAnswer, mistakesPromptList, mistakesNoAcceptList, mistakesAcceptList] = setAnswerInfo(actual)
+  const { promptList, noAcceptList, acceptList, mistakesPromptList, mistakesNoAcceptList, mistakesAcceptList } = setAnswerInfo(actual)
+
   // do preliminary tests -- allows for finding anomalies like "the invisible man" vs "invisible man", they're slightly less accurate but should be fine
   const distances = [].concat(...[mistakesPromptList, mistakesNoAcceptList, mistakesAcceptList]).map(elem => distance(submitted, elem))
 
@@ -38,7 +31,6 @@ function checkCorrect (submitted, actual, questionText, wordsIn) {
     }
   }
 
-
   const displayedText = fixAnswer(questionText).split(/\s/g).slice(0, wordsIn)
   // displayedText=displayedText.split(" ");
   questionText = questionText.toLowerCase()
@@ -47,8 +39,8 @@ function checkCorrect (submitted, actual, questionText, wordsIn) {
 
   const submittedAnswer = fixAnswer(submitted, questionText).split(' ')
 
-  const whatToDo = ''
-  let toReturn
+  // const whatToDo = ''
+  // let toReturn
 
   // ANSWER INCORRECT CHECK
 
@@ -241,7 +233,15 @@ function setAnswerInfo (fullText, questionText) {
     return (elem !== '')
   })
 
-  return [promptAnswers, incorrectAnswers, correctAnswers, bolded, mistakesPromptAnswers, mistakesIncorrectAnswers, mistakesCorrectAnswers]
+  return {
+    promptList: promptAnswers,
+    noAcceptList: incorrectAnswers,
+    acceptList: correctAnswers,
+    boldedAnswer: bolded,
+    mistakesPromptList: mistakesPromptAnswers,
+    mistakesNoAcceptList: mistakesIncorrectAnswers,
+    mistakesAcceptList: mistakesCorrectAnswers
+  }
 }
 
 function commonAnswerMistakes (answer) {
@@ -507,7 +507,5 @@ function charDist (c1, c2) {
     return (1.5)
   }
 }
-
-
 
 module.exports = checkCorrect

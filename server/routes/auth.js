@@ -1,5 +1,5 @@
-const router = require('express').Router()
-const passport = require('../config/passport')
+import { Router } from 'express'
+import passport from '../config/passport'
 
 function authOrRedirect (method, options) {
   return function (req, res, next) {

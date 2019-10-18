@@ -19,7 +19,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-var sanitizeHtml = require('sanitize-html')
+import sanitizeHtml from 'sanitize-html'
 
 export function cleanSpecial (str) {
   let newStr = str.replace(/Â/g, '')

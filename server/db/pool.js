@@ -1,3 +1,3 @@
-const { createPool } = require('slonik')
+import createPool from 'slonik'
 
-module.exports = createPool(process.env.POSTGRES_CONNECTION_STRING)
+export default createPool(process.env.POSTGRES_CONNECTION_STRING)

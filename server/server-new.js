@@ -1,26 +1,25 @@
 
-const express = require('express')
-const http = require('http')
-const history = require('connect-history-api-fallback')
-
-const session = require('express-session')
-const RedisStore = require('connect-redis')(session)
+import express from 'express';
+import http from 'http';
+import history from 'connect-history-api-fallback';
+import session from 'express-session';
+import RedisStoreFactory from 'connect-redis';
+const RedisStore = RedisStoreFactory(session);
 const sessionStore = new RedisStore({ url: process.env.REDIS_URL })
 
 const app = express()
 const server = http.Server(app)
 
-const io = require('socket.io')(server)
-const game = require('./game')
-
-const passport = require('./config/passport')
-const passportSocketIo = require('passport.socketio')
-const flash = require('connect-flash')
-
-const cors = require('cors')
+import ioFactory from 'socket.io';
+const io = ioFactory(server);
+import game from './game';
+import passport from './config/passport';
+import passportSocketIo from 'passport.socketio';
+import flash from 'connect-flash';
+import cors from 'cors';
 app.use(cors())
 
-const proxy = require('http-proxy-middleware')
+import proxy from 'http-proxy-middleware';
 
 app.use('/api', proxy('https://www.quizdb.org/api', { changeOrigin: true }))
 app.use('/', proxy('http://localhost:8080', { changeOrigin: true }))
@@ -43,7 +42,7 @@ app.use(passport.session())
 
 app.use('/auth', require('./routes/auth'))
 
-const path = require('path')
+import path from 'path';
 // app.get('/', (req, res) => {
 //   res.sendFile(path.join(__dirname, '../client/index.html'))
 // })

@@ -1,4 +1,4 @@
-const redis = require('redis')
-const promisifyAll = require('util-promisifyall')
+import redis from 'redis'
+import promisifyAll from 'util-promisifyall'
 
-module.exports = promisifyAll(redis.createClient(process.env.REDIS_CONNECTION_STRING))
+export default promisifyAll(redis.createClient(process.env.REDIS_CONNECTION_STRING))

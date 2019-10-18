@@ -1,4 +1,4 @@
-const qs = require('qs')
+import qs from 'qs'
 var fetch
 
 if (typeof window === 'undefined' || typeof window.fetch === 'undefined') {
@@ -82,15 +82,10 @@ function fixIDs (questions) {
   return questions
 }
 
-function fetchRandomBonuses (options) {
+export function fetchRandomBonuses (options) {
   return fetchQuestionsFromQuizDB(Object.assign(options, { random: options.limit || 10, questionType: 'Bonus' }))
 }
 
-function fetchRandomTossups (options) {
+export function fetchRandomTossups (options) {
   return fetchQuestionsFromQuizDB(Object.assign(options, { random: options.limit || 10, questionType: 'Tossup' }))
-}
-
-module.exports = {
-  fetchRandomBonuses,
-  fetchRandomTossups
 }

@@ -1,11 +1,12 @@
-const express = require('express')
+import express from 'express'
+
 const app = express()
 const port = 7232
 
-const cors = require('cors')
+import cors from 'cors'
 app.use(cors())
 
-const proxy = require('http-proxy-middleware')
+import proxy from 'http-proxy-middleware'
 
 app.use('/api', proxy('https://www.quizdb.org/api', { changeOrigin: true }))
 app.use('/', proxy('http://localhost:8080', {
