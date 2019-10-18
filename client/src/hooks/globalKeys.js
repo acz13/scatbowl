@@ -1,3 +1,5 @@
+import { onMounted, onBeforeUnmount } from '@vue/composition-api'
+
 function globalKeyHandler (handlers, event) {
   if (typeof handlers === 'undefined') {
     return
@@ -13,7 +15,20 @@ function globalKeyHandler (handlers, event) {
 }
 
 export function useGlobalKeys (handlers) {
-  window.addEventListener('keyup', event => globalKeyHandler(handlers.keyup, event))
-  window.addEventListener('keydown', event => globalKeyHandler(handlers.keydown, event))
-  window.addEventListener('keypress', event => globalKeyHandler(handlers.keypress, event))
+  const listeners = {}
+  const addEventListener = type => {
+    listeners[type] = window.addEventListener(type, event => globalKeyHandler(handlers[type], event))
+  }
+
+  onMounted(() => {
+    for (const type in handlers) {
+      addEventListener(type)
+    }
+  })
+
+  onBeforeUnmount(() => {
+    for (const type in listeners) {
+      window.removeEventListener(type, listeners(type))
+    }
+  })
 }
