@@ -43,17 +43,15 @@
 
           <div class="log">
             <div :key="currentQuestion ? currentQuestion.order_id : 'blank'">
-              <slide-up-down up down open startOpening context="mainQuestion">
-                <Question
-                  :wordsIn="wordsIn"
-                  v-bind="currentQuestion || {}"
-                  @reachedEnd="timer.stop"
-                  :revealed="readingState.revealed"
-                  ref="mainQuestion"
-                  :formatted_answer="readingState.revealed ? currentQuestion.formatted_answer : ''"
-                  startOpening
-                ></Question>
-              </slide-up-down>
+              <Question
+                v-show-slide:400:swing:startOpening="open"
+                :wordsIn="wordsIn"
+                v-bind="currentQuestion || {}"
+                @reachedEnd="timer.stop"
+                :revealed="readingState.revealed"
+                ref="mainQuestion"
+                :formatted_answer="readingState.revealed ? currentQuestion.formatted_answer : ''"
+              ></Question>
             </div>
             <div
               class="log-item"
@@ -63,7 +61,7 @@
               <Question
                 v-bind="question"
                 revealed
-                startClosing
+                startAction="startClosing"
               ></Question>
             </div>
           </div>
@@ -119,7 +117,7 @@ import BInput from 'buefy/src/components/input/Input'
 // import Message from '@/components/Message'
 import Settings from '@/components/Settings'
 import Question from '@/components/Question'
-import SlideUpDown from '@/components/SlideUpDown'
+// import SlideUpDown from '@/components/SlideUpDown'
 
 import { localRoom } from '@/hooks/local'
 import { useGlobalKeys } from '@/hooks/globalKeys'
@@ -229,9 +227,12 @@ export default {
       toSubmit.value = ''
     }
 
+    const open = ref(true)
+
     useGlobalKeys({
       keyup: {
-        n: dispNextQuestion
+        n: dispNextQuestion,
+        '`': () => { open.value = !open.value }
       },
       keydown: {
         ' ': handleSpace
@@ -265,7 +266,8 @@ export default {
       handleSpace,
       handleSubmit,
 
-      console
+      console,
+      open
     }
   },
   // created () {
@@ -308,8 +310,8 @@ export default {
     Question,
     BButton,
     BField,
-    BInput,
-    SlideUpDown
+    BInput
+    // SlideUpDown
   }
 }
 </script>

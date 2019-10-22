@@ -5,7 +5,7 @@
         {{ tournament.name }} | {{ category.name }} | {{ subcategory.name }}
       </p>
     </div>
-    <slide-up-down :open="open" :startClosing="startClosing" up down context="question">
+    <div v-show-slide:[slideArgs]="open">
       <div class="card-content has-background-light has-text-left">
         <span v-if="revealed" v-html="formatted_text"></span>
         <PartialText v-else :wordArray="wordArray" :wordsIn="wordsIn"></PartialText>
@@ -16,7 +16,7 @@
           <span v-if="revealed" v-html="formatted_answer"></span>
         </div>
       </footer>
-    </slide-up-down>
+    </div>
   </div>
 </template>
 
@@ -26,7 +26,7 @@
 // import BCollapse from 'buefy/src/components/collapse/Collapse'
 // import BIcon from 'buefy/src/components/icon/Icon'
 
-import SlideUpDown from './SlideUpDown'
+// import SlideUpDown from './SlideUpDown'
 
 import PartialText from './PartialText'
 
@@ -34,7 +34,7 @@ export default {
   name: 'Question',
   data () {
     return {
-      open: !this.startClosing
+      open: !(this.startAction === 'startClosing')
     }
   },
   props: {
@@ -74,9 +74,9 @@ export default {
       type: Number,
       default: Infinity
     },
-    startClosing: {
-      type: Boolean,
-      default: false
+    startAction: {
+      type: String,
+      default: ''
     }
   },
   computed: {
@@ -88,6 +88,9 @@ export default {
     },
     slotName () {
       return this.revealed ? 'trigger' : null
+    },
+    slideArgs () {
+      return `400:swing:${this.startAction}`
     }
   },
   watch: {
@@ -103,10 +106,10 @@ export default {
     }
   },
   components: {
-    PartialText,
+    PartialText
     // BCollapse,
     // BIcon,
-    SlideUpDown
+    // SlideUpDown
   }
 }
 </script>
