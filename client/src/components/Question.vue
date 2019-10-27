@@ -29,6 +29,7 @@
 // import SlideUpDown from './SlideUpDown'
 
 import PartialText from './PartialText'
+import splitKeepFormatting from '@shared/splitKeepFormatting'
 
 export default {
   name: 'Question',
@@ -81,7 +82,7 @@ export default {
   },
   computed: {
     wordArray () {
-      return this.formatted_text.split(/\s/g)
+      return splitKeepFormatting(this.formatted_text)
     },
     numWords () {
       return this.wordArray.length

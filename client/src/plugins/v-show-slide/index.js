@@ -40,8 +40,8 @@ const VShowSlide = {
   /**
    * Inserted directive hook. Called when the bound element has been inserted into its parent node
    */
-  inserted(el, binding) {
-    this.initializeTarget(el)
+  inserted(el, binding, vnode) {
+    this.initializeTarget(el, vnode)
   },
 
   /**
@@ -189,7 +189,7 @@ const VShowSlide = {
   /**
    * Initialize styles on target element
    */
-  initializeTarget(el) {
+  initializeTarget(el, vnode) {
     const { easing, durationInSeconds, startAction, initialState } = this.getTargetByEl(el)
 
     if (!initialState) {
@@ -201,9 +201,9 @@ const VShowSlide = {
     el.style.transition = `height ${easing} ${durationInSeconds}`
 
     if (startAction === "open") {
-      this.slideOpen(el)
+      vnode.context.$nextTick(() => this.slideOpen(el))
     } else if (startAction === "close") {
-      this.slideClosed(el)
+      vnode.context.$nextTick(() => this.slideClosed(el))
     }
   },
 

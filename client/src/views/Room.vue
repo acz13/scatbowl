@@ -42,9 +42,10 @@
           </transition-group>
 
           <div class="log">
-            <div :key="currentQuestion ? currentQuestion.order_id : 'blank'">
+            <div :key="currentQuestion ? currentQuestion.order_id : 'blank'" class="log-item">
               <Question
                 v-show-slide:400:swing:startOpening="open"
+                class="question"
                 :wordsIn="wordsIn"
                 v-bind="currentQuestion || {}"
                 @reachedEnd="timer.stop"
@@ -60,6 +61,7 @@
             >
               <Question
                 v-bind="question"
+                class="question"
                 revealed
                 startAction="startClosing"
               ></Question>
@@ -96,13 +98,13 @@
   margin-bottom: 0.75rem;
 }
 
-.mainQuestion {
-  /* margin-bottom: 1rem */
+.question:last-child {
+  margin-bottom: 0.75rem;
 }
 
 .log-item {
-  margin-top: 3rem;
-  display: block;
+  /* margin-top: 3rem; */
+  /* display: block; */
 }
 
 </style>
