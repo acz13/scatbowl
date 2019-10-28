@@ -6,6 +6,7 @@ import * as quizDBQuestionManager from '@shared/quizDBQuestions'
 import defaultSearchFilters from '@/assets/json/defaultSearchFilters.json'
 
 import checkCorrect from '@shared/answerChecking'
+import makeID from '@shared/makeID'
 
 import { useTimer } from '@/hooks/timer'
 
@@ -75,8 +76,21 @@ export function localRoom () {
     questionQueue.push(...newQuestions)
   }
 
+  const currentQuestion = ref(null)
+
+  const inTransition = ref(false)
+  const nextLocked = ref(false)
+
   async function nextQuestion () {
+    if (nextLocked.value) {
+      return false
+    }
+
+    nextLocked.value = true
+
     fetchLocked.value = false
+
+    timer.stop()
 
     if (questionQueue.length === 0) {
       await loadQuestions(settings)
@@ -87,10 +101,40 @@ export function localRoom () {
     }
 
     if (fetchLocked.value) {
+      return false
+    }
+
+    try {
+      timer.reset()
+      inTransition.value = true
+      resetReading()
+
+      currentQuestion.value = questionQueue.pop()
+
+      return true
+    } catch (e) {
+      timer.start()
+
+      return false
+    }
+  }
+
+  function addMessage (message) {
+    if (!currentQuestion) {
       return
     }
 
-    return questionQueue.pop()
+    message.id = makeID(5)
+
+    if (currentQuestion.value.hasOwnProperty('messages')) {
+      currentQuestion.value.messages.push(message)
+    } else {
+      currentQuestion.value.messages = [message]
+    }
+  }
+
+  async function chat (text) {
+    addMessage({ text: text, type: chat, sender: 'offline user' })
   }
 
   // Buzzing
@@ -139,7 +183,13 @@ export function localRoom () {
 
     readingState,
 
+    currentQuestion,
+    inTransition,
+    nextLocked,
     nextQuestion,
+
+    chat,
+    addMessage,
 
     wordsIn,
     timer,

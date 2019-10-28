@@ -20,7 +20,7 @@
           <p>Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % settings.wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }}</p>
 
           <transition-group name="fade" mode="out-in">
-            <b-field v-show="readingState.buzzing" expanded key="inputs" class="controlfield">
+            <b-field v-show="readingState.buzzing || chatting" expanded key="inputs" class="controlfield">
               <b-input
                 style="margin-bottom: 0"
                 expanded
@@ -30,14 +30,15 @@
                 @keyup.native.enter.stop="handleSubmit"
               ></b-input>
               <p class="control">
-                <button class="button is-danger" @click="handleSubmit">Buzz</button>
+                <button class="button" :class="[readingState.buzzing ? 'is-danger' : 'is-info']" @click="handleSubmit">Submit</button>
               </p>
             </b-field>
-            <b-field v-show="!readingState.buzzing" key="buttons" class="controlfield">
+            <b-field v-show="!(readingState.buzzing || chatting)" key="buttons" class="controlfield">
               <b-button @click="timer.start">Start Reading</b-button>
               <b-button @click="handleSpace">Buzz</b-button>
               <b-button @click="resetReading">Reset Reading</b-button>
               <b-button @click="dispNextQuestion">Next Question</b-button>
+              <b-button @click="chatting = true; focusInput()">Chat</b-button>
             </b-field>
           </transition-group>
 
@@ -45,7 +46,7 @@
             <div :key="currentQuestion ? currentQuestion.order_id : 'blank'" class="log-item">
               <Question
                 v-show-slide:400:swing:startOpening="open"
-                class="question"
+                class="question mainQuestion"
                 :wordsIn="wordsIn"
                 v-bind="currentQuestion || {}"
                 @reachedEnd="timer.stop"
@@ -53,6 +54,11 @@
                 ref="mainQuestion"
                 :formatted_answer="readingState.revealed ? currentQuestion.formatted_answer : ''"
               ></Question>
+              <div class="messages" v-if="currentQuestion">
+                <div v-for="message in currentQuestion.messages" class="sb-message" :key="message.id" v-show-slide:400:swing:startOpening="open">
+                  <Message v-bind="message"></Message>
+                </div>
+              </div>
             </div>
             <div
               class="log-item"
@@ -65,6 +71,13 @@
                 revealed
                 startAction="startClosing"
               ></Question>
+              <div class="messages">
+                <div class="messages" v-if="question">
+                  <div v-for="message in question.messages" class="sb-message" :key="message.id">
+                    <Message v-bind="message"></Message>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -98,12 +111,12 @@
   margin-bottom: 0.75rem;
 }
 
-.question:last-child {
+.question {
   margin-bottom: 0.75rem;
 }
 
 .log-item {
-  /* margin-top: 3rem; */
+  margin-bottom: 1rem;
   /* display: block; */
 }
 
@@ -116,7 +129,7 @@ import BButton from 'buefy/src/components/button/Button'
 import BField from 'buefy/src/components/field/Field'
 import BInput from 'buefy/src/components/input/Input'
 
-// import Message from '@/components/Message'
+import Message from '@/components/Message'
 import Settings from '@/components/Settings'
 import Question from '@/components/Question'
 // import SlideUpDown from '@/components/SlideUpDown'
@@ -140,7 +153,13 @@ export default {
 
       readingState,
 
+      currentQuestion,
+      inTransition,
+      nextLocked,
       nextQuestion,
+
+      chat,
+      // addMessage,
 
       wordsIn,
       timer,
@@ -155,59 +174,40 @@ export default {
     const questionLog = ref([])
     const logLength = computed(() => questionLog.value.length)
 
-    const currentQuestion = ref(null)
-
-    const inTransition = ref(false)
-    const nextLocked = ref(false)
-
     async function dispNextQuestion () {
-      if (nextLocked.value) {
-        return
-      }
-
-      nextLocked.value = true
-
       const oldQuestion = currentQuestion.value
 
-      timer.stop()
+      if (await nextQuestion()) {
+        window.requestAnimationFrame(() => {
+          inTransition.value = false
+          nextLocked.value = false
 
-      try {
-        const newQuestion = await nextQuestion()
-
-        timer.reset()
-
-        inTransition.value = true
-        resetReading()
-
-        currentQuestion.value = newQuestion
-      } catch (e) {
-        timer.start()
-        return
-      }
-
-      window.requestAnimationFrame(() => {
-        inTransition.value = false
-        nextLocked.value = false
-
-        if (oldQuestion) {
-          if (questionLog.value.length >= 5) {
-            questionLog.value.pop()
+          if (oldQuestion) {
+            if (questionLog.value.length >= 5) {
+              questionLog.value.pop()
+            }
+            questionLog.value.unshift(oldQuestion)
+            // questionLog.value.push({ component: 'Message', message: 'hello' })
           }
-          questionLog.value.unshift(oldQuestion)
-          // questionLog.value.push({ component: 'Message', message: 'hello' })
-        }
 
-        timer.start()
-      })
+          timer.start()
+        })
+      }
     }
 
     const submitInput = ref(null)
     const toSubmit = ref('')
+    const chatting = ref(null)
+
     let inputEl
 
     onMounted(() => {
       inputEl = submitInput.value.$el.querySelector('input')
     })
+
+    function focusInput () {
+      inputEl.focus()
+    }
 
     async function handleSpace (event) {
       event.preventDefault()
@@ -215,16 +215,21 @@ export default {
       if (!readingState.buzzing) {
         await buzz()
 
-        inputEl.focus()
+        focusInput()
       }
     }
 
     async function handleSubmit (event) {
       event.preventDefault()
 
-      const result = await submitAnswer(toSubmit.value, currentQuestion.value)
+      if (readingState.buzzing) {
+        const result = await submitAnswer(toSubmit.value, currentQuestion.value)
 
-      console.log(result)
+        console.log(result)
+      } else if (chatting.value) {
+        chat(toSubmit.value)
+        chatting.value = false
+      }
 
       toSubmit.value = ''
     }
@@ -237,7 +242,8 @@ export default {
         '`': () => { open.value = !open.value }
       },
       keydown: {
-        ' ': handleSpace
+        ' ': handleSpace,
+        '/': () => { chatting.value = true; focusInput() }
       }
     })
 
@@ -262,6 +268,11 @@ export default {
 
       finishReading,
       resetReading,
+
+      focusInput,
+
+      chat,
+      chatting,
 
       toSubmit,
       submitInput,
@@ -307,7 +318,7 @@ export default {
   //   next()
   // },
   components: {
-    // Message,
+    Message,
     Settings,
     Question,
     BButton,

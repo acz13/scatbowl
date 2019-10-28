@@ -2,8 +2,8 @@
   <p
     :class="[
       data.class,
-      data.staticClass
+      data.staticClass,
     ]">
-    {{ props.message }}
+    <b>{{ props.sender }}</b> {{ props.text }}
   </p>
 </template>

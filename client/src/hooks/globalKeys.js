@@ -9,6 +9,8 @@ function globalKeyHandler (handlers, event) {
     return
   }
 
+  event.preventDefault()
+
   if (handlers.hasOwnProperty(event.key)) {
     handlers[event.key](event)
   }

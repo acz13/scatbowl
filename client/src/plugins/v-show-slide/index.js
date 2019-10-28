@@ -34,6 +34,7 @@ const VShowSlide = {
    * Bind directive hook. Called only once, when the directive is first bound to the element.
    */
   bind(el, binding) {
+    console.log(binding)
     this.parseArgs(el, binding)
   },
 
@@ -116,8 +117,6 @@ const VShowSlide = {
       const easing = this.validateEasing(argsArray)
       const duration = this.validateDuration(argsArray)
       const { startAction, initialState }  = this.validateStartAction(argsArray, binding.value)
-
-      console.log(argsArray)
 
       this.targets.push({
         el,

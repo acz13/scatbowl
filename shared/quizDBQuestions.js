@@ -1,20 +1,12 @@
 import qs from 'qs'
+import makeID from './makeID'
+
 var fetch
 
 if (typeof window === 'undefined' || typeof window.fetch === 'undefined') {
   fetch = require('node-fetch')
 } else {
   fetch = window.fetch
-}
-
-function makeid (length) {
-  var result = ''
-  var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  var charactersLength = characters.length
-  for (var i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength))
-  }
-  return result
 }
 
 // Blatantly ripped off from Raynor Kuang's source code
@@ -77,7 +69,7 @@ function fetchQuestionsFromQuizDB ({
 function fixIDs (questions) {
   questions.forEach(question => {
     delete Object.assign(question, { quizdb_id: question.id })['id']
-    question.order_id = makeid(5)
+    question.order_id = makeID(5)
   })
   return questions
 }
