@@ -1,1 +1,2 @@
-## Pending name change
+## ~~Pending name change~~
+## ~~Scatbowl~~ -> [Sb] Antimony
