@@ -1,8 +1,15 @@
 {
   "private": true,
   "dependencies": {
+    "core-js": "^3.4.0",
     "htmlparser2": "^4.0.0",
     "node-fetch": "^2.6.0",
     "qs": "^6.8.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.7.0",
+    "@babel/core": "^7.7.2",
+    "@babel/preset-env": "^7.7.1",
+    "@babel/runtime-corejs3": "^7.7.2"
   }
 }

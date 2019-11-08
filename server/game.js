@@ -3,7 +3,7 @@ import schemas from './config/schemas'
 // const { sql } = require('slonik')
 // const redis = require('./db/redis')
 import quizDBQuestionManager from '../shared/quizDBQuestions'
-import dbQuestionManager from './util/dbQuestions'
+import dbQuestionManager from '../shared/dbQuestions'
 import checkCorrect from '../shared/answerChecking'
 import filterByProps from './util/filterByProps'
 import { cleanString } from './util/sanitize'

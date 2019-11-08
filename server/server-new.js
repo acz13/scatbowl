@@ -1,25 +1,26 @@
+import 'dotenv/config'
 
-import express from 'express';
-import http from 'http';
-import history from 'connect-history-api-fallback';
-import session from 'express-session';
-import RedisStoreFactory from 'connect-redis';
-const RedisStore = RedisStoreFactory(session);
+import express from 'express'
+import http from 'http'
+import history from 'connect-history-api-fallback'
+import session from 'express-session'
+import RedisStoreFactory from 'connect-redis'
+const RedisStore = RedisStoreFactory(session)
 const sessionStore = new RedisStore({ url: process.env.REDIS_URL })
 
 const app = express()
 const server = http.Server(app)
 
-import ioFactory from 'socket.io';
-const io = ioFactory(server);
-import game from './game';
-import passport from './config/passport';
-import passportSocketIo from 'passport.socketio';
-import flash from 'connect-flash';
-import cors from 'cors';
+import ioFactory from 'socket.io'
+const io = ioFactory(server)
+import game from './game'
+import passport from './config/passport'
+import passportSocketIo from 'passport.socketio'
+import flash from 'connect-flash'
+import cors from 'cors'
 app.use(cors())
 
-import proxy from 'http-proxy-middleware';
+import proxy from 'http-proxy-middleware'
 
 app.use('/api', proxy('https://www.quizdb.org/api', { changeOrigin: true }))
 app.use('/', proxy('http://localhost:8080', { changeOrigin: true }))
