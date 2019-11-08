@@ -5,26 +5,28 @@ import http from 'http'
 import history from 'connect-history-api-fallback'
 import session from 'express-session'
 import RedisStoreFactory from 'connect-redis'
-const RedisStore = RedisStoreFactory(session)
-const sessionStore = new RedisStore({ url: process.env.REDIS_URL })
-
-const app = express()
-const server = http.Server(app)
 
 import ioFactory from 'socket.io'
-const io = ioFactory(server)
 import game from './game'
 import passport from './config/passport'
 import passportSocketIo from 'passport.socketio'
 import flash from 'connect-flash'
 import cors from 'cors'
-app.use(cors())
 
 import proxy from 'http-proxy-middleware'
 
+// import path from 'path'
+
+const RedisStore = RedisStoreFactory(session)
+const sessionStore = new RedisStore({ url: process.env.REDIS_URL })
+
+const app = express()
+const server = http.Server(app)
+const io = ioFactory(server)
+app.use(cors())
+
 app.use('/api', proxy('https://www.quizdb.org/api', { changeOrigin: true }))
 app.use('/', proxy('http://localhost:8080', { changeOrigin: true }))
-
 
 const SESSION_SECRET = process.env.SESSION_SECRET || 'state college academic tournament!'
 
@@ -42,8 +44,6 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 app.use('/auth', require('./routes/auth'))
-
-import path from 'path';
 // app.get('/', (req, res) => {
 //   res.sendFile(path.join(__dirname, '../client/index.html'))
 // })
