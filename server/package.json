@@ -7,9 +7,10 @@
     "start": "babel-node --root-mode upward --ignore='node_modules' server-new.js",
     "proxy": "babel-node proxy.js",
     "test": "babel-node test.js",
-    "lint": "standard",
-    "lintfix": "standard --fix",
-    "watch": "nodemon --exec npm start"
+    "lint": "eslint --ignore-path .gitignore .",
+    "lintfix": "eslint --fix --ignore-path .gitignore .",
+    "watch": "nodemon --exec npm start",
+    "serve": "npm run watch"
   },
   "repository": {
     "type": "git",
@@ -29,31 +30,24 @@
     "connect-history-api-fallback": "^1.6.0",
     "connect-redis": "^3.4.2",
     "cookie-parser": "^1.4.4",
-    "core-js": "^3.4.0",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-session": "^1.16.2",
     "http-proxy-middleware": "^0.20.0",
-    "node-fetch": "^2.6.0",
     "passport": "^0.4.0",
     "passport-custom": "^1.0.5",
     "passport-google-oauth": "^2.0.0",
     "passport-local": "^1.0.0",
     "passport.socketio": "^3.7.0",
-    "qs": "^6.8.0",
     "sanitize-html": "^1.20.1",
     "slonik": "^18.3.0",
     "socket.io": "^2.2.0",
     "util-promisifyall": "^1.0.6"
   },
   "devDependencies": {
-    "@babel/core": "^7.6.4",
-    "@babel/node": "^7.6.3",
-    "@babel/preset-env": "^7.6.3",
-    "@babel/runtime-corejs3": "^7.7.2",
     "@slonik/migrator": "^0.1.13",
-    "standard": "^13.1.0"
+    "nodemon": "^1.19.4"
   },
   "standard": {
     "ignore": [
