@@ -50,14 +50,9 @@
       "parser": "babel-eslint"
     }
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "lint-staged": {
     "*.{js,vue}": [
-      "npm run lint -s",
+      "npm run lint --fix -s",
       "git add"
     ]
   }

@@ -53,5 +53,11 @@
     "ignore": [
       "server.js"
     ]
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint --fix",
+      "git add"
+    ]
   }
 }

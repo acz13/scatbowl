@@ -14,6 +14,13 @@
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
-    "lerna": "^3.18.4"
+    "husky": "^3.0.9",
+    "lerna": "^3.18.4",
+    "lint-staged": "^9.4.2"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lerna exec --concurrency 1 --stream -- lint-staged"
+    }
   }
 }
