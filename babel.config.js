@@ -7,16 +7,4 @@ module.exports = {
     "server",
     "shared"
   ],
-  presets: [
-    [
-      "@babel/preset-env",
-      {
-        targets: {
-          node: 9
-        },
-        useBuiltIns: "usage",
-        corejs: 3
-      }
-    ]
-  ]
 }

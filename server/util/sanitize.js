@@ -59,7 +59,7 @@ function escapeRegexSpecial (str) {
 export function formatQuestionString (str, query = null) {
   let newStr = cleanString(str)
   if (query) {
-    newStr = newStr.replace(new RegExp(escapeRegexSpecial(query), 'gi'), '<mark class=\'question-highlight\'>$&</mark>')
+    newStr = newStr.replace(new RegExp(escapeRegexSpecial(query), 'gi'), `<mark class='question-highlight'>$&</mark>`)
   }
   return newStr
 }

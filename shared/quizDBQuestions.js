@@ -68,7 +68,7 @@ function fetchQuestionsFromQuizDB ({
 
 function fixIDs (questions) {
   questions.forEach(question => {
-    delete Object.assign(question, { quizdb_id: question.id }).id
+    delete Object.assign(question, { quizdb_id: question.id })['id']
     question.order_id = makeID(5)
   })
   return questions
