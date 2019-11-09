@@ -3,7 +3,7 @@ import schemas from './config/schemas'
 // const { sql } = require('slonik')
 // const redis = require('./db/redis')
 import quizDBQuestionManager from '../shared/quizDBQuestions'
-import dbQuestionManager from '../shared/dbQuestions'
+// import dbQuestionManager from '../shared/dbQuestions'
 import checkCorrect from '../shared/answerChecking'
 import filterByProps from './util/filterByProps'
 import { cleanString } from './util/sanitize'
@@ -171,7 +171,7 @@ class Game { // Move to this client side eventually
     }
 
     // const displayedText (Should we calculate this server side?)
-    const displayedText = ''
+    // const displayedText = ''
     const power = false
     const result = checkCorrect(answer, this.currentQuestion.formatted_answer, this.currentQuestion.formatted_text, 0 /*, this.currentQuestion.category */)
 

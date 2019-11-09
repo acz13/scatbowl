@@ -1,8 +1,8 @@
 import { Router } from 'express'
 
-const router = Router()
-
 import passport from '../config/passport'
+
+const router = Router()
 
 function authOrRedirect (method, options) {
   return function (req, res, next) {
