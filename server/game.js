@@ -2,9 +2,9 @@ import schemas from './config/schemas'
 // const pool = require('./db/pool')
 // const { sql } = require('slonik')
 // const redis = require('./db/redis')
-import quizDBQuestionManager from '../shared/quizDBQuestions'
-// import dbQuestionManager from '../shared/dbQuestions'
-import checkCorrect from '../shared/answerChecking'
+import quizDBQuestionManager from 'sb-shared/quizDBQuestions'
+// import dbQuestionManager from 'sb-shared/dbQuestions'
+import checkCorrect from 'sb-shared/answerChecking'
 import filterByProps from './util/filterByProps'
 import { cleanString } from './util/sanitize'
 

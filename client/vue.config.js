@@ -1,9 +1,7 @@
-const path = require('path')
-
 module.exports = {
   chainWebpack: config => {
     config.resolve.alias
-      .set('@shared', path.join(__dirname, '../shared'))
+      .set('@shared', 'sb-shared')
     config.externals('node-fetch', '')
     config.devtool('source-map')
   },
