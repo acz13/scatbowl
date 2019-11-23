@@ -127,7 +127,7 @@ export function localRoom () {
     message.id = makeID(5)
 
     if (currentQuestion.value.hasOwnProperty('messages')) {
-      currentQuestion.value.messages.push(message)
+      currentQuestion.value.messages.unshift(message)
     } else {
       currentQuestion.value.messages = [message]
     }
