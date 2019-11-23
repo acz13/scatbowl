@@ -215,7 +215,7 @@ export default {
       if (!readingState.buzzing) {
         await buzz()
 
-        focusInput()
+        root.$nextTick(focusInput)
       }
     }
 
@@ -243,7 +243,7 @@ export default {
       },
       keydown: {
         ' ': handleSpace,
-        '/': () => { chatting.value = true; focusInput() }
+        '/': () => { chatting.value = true; root.$nextTick(focusInput) }
       }
     })
 
