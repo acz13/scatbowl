@@ -34,7 +34,6 @@ const VShowSlide = {
    * Bind directive hook. Called only once, when the directive is first bound to the element.
    */
   bind(el, binding) {
-    console.log(binding)
     this.parseArgs(el, binding)
   },
 
