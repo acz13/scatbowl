@@ -22,7 +22,6 @@ const sessionStore = new RedisStore({ url: process.env.REDIS_URL })
 
 const app = express()
 const server = http.Server(app)
-const io = ioFactory(server)
 app.use(cors())
 
 const SESSION_SECRET = process.env.SESSION_SECRET || 'state college academic tournament!'
@@ -40,10 +39,9 @@ app.use(flash())
 app.use(passport.initialize())
 app.use(passport.session())
 
-
 app.use('/api', proxy('https://www.quizdb.org/api', { changeOrigin: true }))
 app.use('/auth', require('./routes/auth'))
-app.use(['/', '!**/test'], proxy('http://localhost:8080', { changeOrigin: true }))
+app.use('/', proxy('http://localhost:8080', { changeOrigin: true }))
 // app.get('/', (req, res) => {
 //   res.sendFile(path.join(__dirname, '../client/index.html'))
 // })
@@ -69,6 +67,8 @@ function joinRoom (socket, room) {
   console.log('joined ' + room)
   socket.join(room)
 }
+
+const io = ioFactory(server)
 
 // SOCKET.IO
 io.use(passportSocketIo.authorize({

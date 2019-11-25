@@ -1,4 +1,4 @@
-import { reactive, ref, toRefs } from '@vue/composition-api'
+import { reactive, ref, toRefs, onBeforeUnmount } from '@vue/composition-api'
 
 import defaultSearchFilters from '@/assets/json/defaultSearchFilters.json'
 
@@ -11,6 +11,10 @@ import io from 'socket.io-client'
 export default function liveRoom (vm) {
   const socket = io('/', { query: { room: 'mytestingroom' } })
   localStorage.debug = 'socket.io-client:socket'
+
+  onBeforeUnmount(() => {
+    socket.close()
+  })
 
   function waitFor (event, fn) {
     return new Promise((resolve, reject) => {
@@ -40,6 +44,17 @@ export default function liveRoom (vm) {
   function changeSearchFilters (newSearchFilters) {
     changeSettings(newSearchFilters, 'searchFilters')
   }
+
+  socket.on('settingsChanged', ({ newSettings, restartInfo }) => {
+    for (const key in newSettings) {
+      settings[key] = newSettings[key]
+
+      if (key === 'wordDelay') {
+        timer.stop()
+        timer.start(restartInfo.startTime, restartInfo.resumePoint)
+      }
+    }
+  })
 
   const filterOptions = ref(defaultSearchFilters)
 
@@ -146,7 +161,7 @@ export default function liveRoom (vm) {
   function submitAnswer (submitted, question) {
     socket.emit('submitAnswer', submitted)
 
-    waitFor('answerSubmitted')
+    waitFor('answerSubmitted', () => true)
   }
 
   return {

@@ -21,6 +21,7 @@ class Game { // Move to this client side eventually
     this.currentQuestion = null
     this.questionQueue = null
     this.startTime = null
+    this.resumePoint = null
 
     this.isPaused = false
     this.isBuzzing = null
@@ -47,6 +48,7 @@ class Game { // Move to this client side eventually
 
     this.currentQuestion = null
     this.startTime = null
+    this.resumePoint = null
     this.isBuzzing = null
     this.promptLevel = 0
     this.buzzList = null
@@ -122,8 +124,8 @@ class Game { // Move to this client side eventually
   changeSettings (player, newSettings, rootKey) {
     // Validate new settings and determine if we need to clear the queue
     const toChange = rootKey ? this.settings[rootKey] : this.settings
-    const schema = rootKey ? schemas.settings[rootKey] : schemas.settings
-  
+    const schema = rootKey ? schemas[rootKey] : schemas.settings
+
     const { error, value: settings } = schema.validate(Object.assign({}, toChange, newSettings))
 
     if (error) {
@@ -133,13 +135,24 @@ class Game { // Move to this client side eventually
 
     this.questionQueue = null
 
+    if (newSettings.wordDelay) {
+      const now = Date.now()
+
+      this.resumePoint += Math.floor((now - this.startTime) / this.settings.wordDelay) + 1
+      this.startTime = now - now % this.settings.wordDelay + newSettings.wordDelay
+    }
+
     if (rootKey) {
       this.settings[rootKey] = settings
     } else {
       this.settings = settings
     }
 
-    this.emit('settingsChanged', { player: player.id, newSettings: this.settings })
+    this.emit('settingsChanged', {
+      player: player.id,
+      newSettings: this.settings,
+      restartInfo: { resumePoint: this.resumePoint, startTime: this.startTime }
+    })
   }
 
   buzz (player, time) {
@@ -252,11 +265,7 @@ class Game { // Move to this client side eventually
       try {
         this.questionQueue = await this.questionManager.fetchRandomTossups({
           searchQuery: this.settings.searchQuery,
-          searchFilters: {
-            difficulty: this.settings.difficulty,
-            subcategory: this.settings.subcategory,
-            category: this.settings.category
-          }
+          searchFilters: this.settings.searchFilters
         })
         console.log('Fetched ' + this.questionQueue.length + ' questions')
       } catch (err) {
@@ -272,7 +281,7 @@ class Game { // Move to this client side eventually
     this.currentQuestion = newQuestion
 
     const now = Date.now()
-    this.startTime = now - now % this.settings.textDelay + this.settings.textDelay
+    this.startTime = now - now % this.settings.wordDelay + this.settings.wordDelay
 
     this.emit('questionLoaded', {
       player: player.id,

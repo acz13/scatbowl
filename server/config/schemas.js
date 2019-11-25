@@ -25,6 +25,12 @@ const userLevels = Joi.object().pattern(
   userLevel
 )
 
+const searchFilters = Joi.object({
+  difficulty: Joi.array().items(Joi.string()), // [] is all difficulties
+  category: Joi.array().items(Joi.number().integer()), // [] is all categories
+  subcategory: Joi.array().items(Joi.number().integer()) // [] is all subcategories
+})
+
 const settings = Joi.object({
   gameMode: Joi.string().valid('infinite').default('infinite'), // Only one game mode for now
 
@@ -44,15 +50,11 @@ const settings = Joi.object({
   manualAnswerCheckingLevel: level.default(Joi.ref('defaultCreatorLevel')),
   maxPromptLevel: Joi.number().positive().allow(null).default(null), // number of times someone can be prompted before neg; null = no limit
 
-  textDelay: Joi.number().min(0).max(500).default(150), // in milliseconds
+  wordDelay: Joi.number().min(0).max(500).default(150), // in milliseconds
 
   searchQuery: Joi.string().allow('').default(''),
 
-  searchFilters: Joi.object({
-    difficulty: Joi.array().items(Joi.string()), // [] is all difficulties
-    category: Joi.array().items(Joi.number().integer()), // [] is all categories
-    subcategory: Joi.array().items(Joi.number().integer()) // [] is all subcategories
-  })
+  searchFilters: searchFilters
 
   // TODO: category weighting
 })
@@ -60,5 +62,6 @@ const settings = Joi.object({
 module.exports = {
   userLevel,
   userLevels,
+  searchFilters,
   settings
 }

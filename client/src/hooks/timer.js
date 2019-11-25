@@ -25,8 +25,12 @@ export function useTimer (delay, offline) {
     lastTimeout: null
   })
 
-  function start (startTime) {
+  function start (startTime, resumePoint) {
     status.stopped = false
+
+    if (resumePoint) {
+      status.resumePoint = resumePoint
+    }
 
     status.startTime = Number.isInteger(startTime) ? startTime : Date.now()
 

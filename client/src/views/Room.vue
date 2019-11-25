@@ -38,7 +38,7 @@
               <b-button @click="handleSpace">Buzz</b-button>
               <b-button @click="resetReading">Reset Reading</b-button>
               <b-button @click="nextQuestion">Next Question</b-button>
-              <b-button @click="chatting = true; focusInput()">Chat</b-button>
+              <b-button @click="openChat">Chat</b-button>
             </b-field>
           </transition-group>
 
@@ -53,6 +53,7 @@
                 :revealed="readingState.revealed"
                 ref="mainQuestion"
                 :formatted_answer="readingState.revealed ? currentQuestion.formatted_answer : ''"
+                :color="currentQuestion.order_id"
               ></Question>
               <div class="messages" v-if="currentQuestion">
                 <div v-for="message in currentQuestion.messages" class="sb-message" :key="message.id" v-show-slide:400:swing:startOpening="open">
@@ -124,7 +125,7 @@
 </style>
 
 <script>
-import { ref, computed, onMounted } from '@vue/composition-api'
+import { ref, computed } from '@vue/composition-api'
 
 import BButton from 'buefy/src/components/button/Button'
 import BField from 'buefy/src/components/field/Field'
@@ -177,7 +178,7 @@ export default {
     root.$on('questionLoaded', oldQuestion => {
       if (oldQuestion) {
         window.requestAnimationFrame(() => {
-          if (questionLog.value.length >= 5) {
+          if (questionLog.value.length >= 15) {
             questionLog.value.pop()
           }
           questionLog.value.unshift(oldQuestion)
@@ -190,14 +191,15 @@ export default {
     const toSubmit = ref('')
     const chatting = ref(null)
 
-    let inputEl
-
-    onMounted(() => {
-      inputEl = submitInput.value.$el.querySelector('input')
-    })
-
     function focusInput () {
-      inputEl.focus()
+      console.log('attempting focus')
+      console.log(submitInput.value.$el.querySelector('input'))
+      submitInput.value.$el.querySelector('input').focus()
+    }
+
+    async function openChat () {
+      chatting.value = true
+      root.$nextTick(focusInput)
     }
 
     async function handleSpace (event) {
@@ -234,11 +236,11 @@ export default {
       },
       keydown: {
         ' ': handleSpace,
-        '/': () => { chatting.value = true; root.$nextTick(focusInput) }
+        '/': openChat
       }
     })
 
-    nextQuestion().then(() => timer.start())
+    nextQuestion()
 
     return {
       settings,
@@ -267,6 +269,7 @@ export default {
 
       toSubmit,
       submitInput,
+      openChat,
       handleSpace,
       handleSubmit,
 
