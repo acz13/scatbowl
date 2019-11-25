@@ -107,9 +107,14 @@ export default {
     }
   },
   watch: {
-    value () {
-      this.tempSearchFilters = this.value.searchFilters
-      this.searchFiltersChanged = true
+    value: {
+      handler () {
+        this.tempSearchFilters = this.value.searchFilters
+        this.searchFiltersChanged = true
+
+        console.log('changed')
+      },
+      deep: true
     }
   },
   methods: {
