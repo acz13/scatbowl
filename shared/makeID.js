@@ -6,11 +6,10 @@
 // a previous project
 
 export default function makeID (length) {
-  var result = ''
-  var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  var charactersLength = characters.length
-  for (var i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength))
+  var letters = '0123456789ABCDEF'
+  var id = '#'
+  for (var i = 0; i < 6; i++) {
+    id += letters[Math.floor(Math.random() * 16)]
   }
-  return result
+  return id
 }

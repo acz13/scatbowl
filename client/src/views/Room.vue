@@ -37,7 +37,7 @@
               <b-button @click="timer.start">Start Reading</b-button>
               <b-button @click="handleSpace">Buzz</b-button>
               <b-button @click="resetReading">Reset Reading</b-button>
-              <b-button @click="dispNextQuestion">Next Question</b-button>
+              <b-button @click="nextQuestion">Next Question</b-button>
               <b-button @click="chatting = true; focusInput()">Chat</b-button>
             </b-field>
           </transition-group>
@@ -70,6 +70,7 @@
                 class="question"
                 revealed
                 startAction="startClosing"
+                :color="question.order_id"
               ></Question>
               <div class="messages">
                 <div class="messages" v-if="question">
@@ -134,7 +135,7 @@ import Settings from '@/components/Settings'
 import Question from '@/components/Question'
 // import SlideUpDown from '@/components/SlideUpDown'
 
-import { localRoom } from '@/hooks/local'
+import localRoom from '@/hooks/live'
 import { useGlobalKeys } from '@/hooks/globalKeys'
 
 export default {
@@ -154,7 +155,6 @@ export default {
       readingState,
 
       currentQuestion,
-      inTransition,
       nextLocked,
       nextQuestion,
 
@@ -169,31 +169,22 @@ export default {
 
       buzz,
       submitAnswer
-    } = localRoom()
+    } = localRoom(root)
 
     const questionLog = ref([])
     const logLength = computed(() => questionLog.value.length)
 
-    async function dispNextQuestion () {
-      const oldQuestion = currentQuestion.value
-
-      if (await nextQuestion()) {
+    root.$on('questionLoaded', oldQuestion => {
+      if (oldQuestion) {
         window.requestAnimationFrame(() => {
-          inTransition.value = false
-          nextLocked.value = false
-
-          if (oldQuestion) {
-            if (questionLog.value.length >= 5) {
-              questionLog.value.pop()
-            }
-            questionLog.value.unshift(oldQuestion)
-            // questionLog.value.push({ component: 'Message', message: 'hello' })
+          if (questionLog.value.length >= 5) {
+            questionLog.value.pop()
           }
-
-          timer.start()
+          questionLog.value.unshift(oldQuestion)
+          // questionLog.value.push({ component: 'Message', message: 'hello' })
         })
       }
-    }
+    })
 
     const submitInput = ref(null)
     const toSubmit = ref('')
@@ -213,9 +204,9 @@ export default {
       event.preventDefault()
 
       if (!readingState.buzzing) {
-        await buzz()
-
-        root.$nextTick(focusInput)
+        if (await buzz()) {
+          root.$nextTick(focusInput)
+        }
       }
     }
 
@@ -238,7 +229,7 @@ export default {
 
     useGlobalKeys({
       keyup: {
-        n: dispNextQuestion,
+        n: nextQuestion,
         '`': () => { open.value = !open.value }
       },
       keydown: {
@@ -247,7 +238,7 @@ export default {
       }
     })
 
-    dispNextQuestion().then(() => timer.start())
+    nextQuestion().then(() => timer.start())
 
     return {
       settings,
@@ -260,8 +251,8 @@ export default {
       questionLog,
       logLength,
       currentQuestion,
-      inTransition,
-      dispNextQuestion,
+      nextLocked,
+      nextQuestion,
 
       wordsIn,
       timer,

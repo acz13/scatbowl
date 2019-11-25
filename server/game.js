@@ -2,7 +2,7 @@ import schemas from './config/schemas'
 // const pool = require('./db/pool')
 // const { sql } = require('slonik')
 // const redis = require('./db/redis')
-import quizDBQuestionManager from 'sb-shared/quizDBQuestions'
+import * as quizDBQuestionManager from 'sb-shared/quizDBQuestions'
 // import dbQuestionManager from 'sb-shared/dbQuestions'
 import checkCorrect from 'sb-shared/answerChecking'
 import filterByProps from './util/filterByProps'
@@ -119,9 +119,12 @@ class Game { // Move to this client side eventually
     this.emit('chat', { player: player.id, message: message })
   }
 
-  changeSettings (player, newSettings) {
+  changeSettings (player, newSettings, rootKey) {
     // Validate new settings and determine if we need to clear the queue
-    const { error, value: settings } = schemas.settings.validate(Object.assign({}, this.settings, newSettings))
+    const toChange = rootKey ? this.settings[rootKey] : this.settings
+    const schema = rootKey ? schemas.settings[rootKey] : schemas.settings
+  
+    const { error, value: settings } = schema.validate(Object.assign({}, toChange, newSettings))
 
     if (error) {
       player.emit('gameError', `Bad settings ${error}`)
@@ -129,7 +132,12 @@ class Game { // Move to this client side eventually
     }
 
     this.questionQueue = null
-    this.settings = settings
+
+    if (rootKey) {
+      this.settings[rootKey] = settings
+    } else {
+      this.settings = settings
+    }
 
     this.emit('settingsChanged', { player: player.id, newSettings: this.settings })
   }
@@ -252,7 +260,7 @@ class Game { // Move to this client side eventually
         })
         console.log('Fetched ' + this.questionQueue.length + ' questions')
       } catch (err) {
-        player.emit('gameError', err.toString())
+        player.emit('gameError', err.toString() + err.stack)
         return // Add in a Guru Meditation Bowl thing later
       }
     }
@@ -260,6 +268,8 @@ class Game { // Move to this client side eventually
     const newQuestion = this.questionQueue.pop()
     newQuestion.formatted_text = cleanString(newQuestion.formatted_text)
     newQuestion.formatted_answer = cleanString(newQuestion.formatted_answer)
+
+    this.currentQuestion = newQuestion
 
     const now = Date.now()
     this.startTime = now - now % this.settings.textDelay + this.settings.textDelay
@@ -275,7 +285,8 @@ class Game { // Move to this client side eventually
         'formatted_text',
         'formatted_answer',
         'quizdb_id',
-        'id'
+        'id',
+        'order_id'
       ], this.currentQuestion),
       startTime: this.startTime
     })

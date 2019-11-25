@@ -1,5 +1,5 @@
 <template>
-  <div class="question card down">
+  <div class="question card down" :style="{ backgroundColor: color }">
     <div class="card-header" @click="toggle">
       <p class="card-header-title tournaments-list">
         {{ tournament.name }} | {{ category.name }} | {{ subcategory.name }}
@@ -76,6 +76,10 @@ export default {
       default: Infinity
     },
     startAction: {
+      type: String,
+      default: ''
+    },
+    color: {
       type: String,
       default: ''
     }

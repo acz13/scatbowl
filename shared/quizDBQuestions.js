@@ -37,8 +37,11 @@ function fetchQuestionsFromQuizDB ({
   limit = 10,
   random,
   questionType,
-  stateKey = null
+  stateKey = null,
+  proxied = false
 } = {}) {
+  const url = proxied ? '/api' : 'https://www.quizdb.org/api'
+
   searchFilters = Object.assign({}, searchFilters, { question_type: [questionType] })
 
   const searchParamsObject = {
@@ -56,7 +59,7 @@ function fetchQuestionsFromQuizDB ({
   const searchQueryString = qs.stringify(searchParamsObject, {
     arrayFormat: 'brackets'
   })
-  return fetch(`/api/${searchEndpoint}?${searchQueryString}`)
+  return fetch(`${url}/${searchEndpoint}?${searchQueryString}`)
     .then(
       response => response.json()
     ).then(

@@ -1,16 +1,28 @@
-// This will eventually be offline supported, but currently proxies to QuizDB.org
-
 import { reactive, ref, toRefs } from '@vue/composition-api'
 
-import * as quizDBQuestionManager from '@shared/quizDBQuestions'
 import defaultSearchFilters from '@/assets/json/defaultSearchFilters.json'
 
-import checkCorrect from '@shared/answerChecking'
 import makeID from '@shared/makeID'
 
 import { useTimer } from '@/hooks/timer'
 
-export default function localRoom (vm) {
+import io from 'socket.io-client'
+
+export default function liveRoom (vm) {
+  const socket = io('/', { query: { room: 'mytestingroom' } })
+  localStorage.debug = 'socket.io-client:socket'
+
+  function waitFor (event, fn) {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Timed out')), 5000)
+
+      socket.once(event, data => {
+        clearTimeout(timeout)
+        resolve(fn(data))
+      })
+    })
+  }
+
   // Settings management
   const settings = reactive({
     searchFilters: {
@@ -22,20 +34,11 @@ export default function localRoom (vm) {
   })
 
   function changeSettings (newSettings, rootKey) {
-    const toChange = rootKey ? settings[rootKey] : settings
-
-    for (const key in newSettings) {
-      toChange[key] = newSettings[key]
-    }
+    socket.emit('changeSettings', { newSettings, rootKey })
   }
 
   function changeSearchFilters (newSearchFilters) {
     changeSettings(newSearchFilters, 'searchFilters')
-
-    clearQuestions()
-
-    console.log('loading questions')
-    loadQuestions(settings)
   }
 
   const filterOptions = ref(defaultSearchFilters)
@@ -51,73 +54,35 @@ export default function localRoom (vm) {
       console.log(err + 'Using default filters')
     })
 
-  // Question management
-  const questionQueue = []
-  const questionManager = quizDBQuestionManager
-
-  const fetchLocked = ref(false)
-
-  function clearQuestions () {
-    questionQueue.length = 0
-    fetchLocked.value = true
-  }
-
-  async function loadQuestions (options = {}) {
-    if (fetchLocked.value) {
-      return
-    }
-
-    const newQuestions = await questionManager.fetchRandomTossups({ proxied: true, ...options })
-
-    if (fetchLocked.value) {
-      return
-    }
-
-    questionQueue.push(...newQuestions)
-  }
-
   const currentQuestion = ref(null)
 
   const nextLocked = ref(false)
 
-  async function nextQuestion () {
+  function nextQuestion () {
     if (nextLocked.value) {
       return false
     }
 
     nextLocked.value = true
 
-    fetchLocked.value = false
+    socket.emit('skipQuestion')
 
-    timer.stop()
-
-    if (questionQueue.length === 0) {
-      await loadQuestions(settings)
-    } else if (questionQueue.length === 1) { // Background
-      console.log('loading in background')
-      loadQuestions(settings)
-        .then(() => console.log('background loaded'))
-    }
-
-    if (fetchLocked.value) {
-      return false
-    }
-
-    try {
-      const oldQuestion = currentQuestion.value
-      currentQuestion.value = questionQueue.pop()
-      resetReading()
-
-      vm.$emit('questionLoaded', oldQuestion)
-
+    return waitFor('questionLoaded', () => {
       nextLocked.value = false
-      timer.start()
-    } catch (e) {
-      timer.start()
-
-      return false
-    }
+      return true
+    })
   }
+
+  socket.on('questionLoaded', ({ player, question, startTime }) => {
+    const oldQuestion = currentQuestion.value
+    currentQuestion.value = question
+    resetReading()
+
+    vm.$emit('questionLoaded', oldQuestion)
+
+    nextLocked.value = false
+    timer.start(startTime)
+  })
 
   function addMessage (message) {
     if (!currentQuestion) {
@@ -134,8 +99,12 @@ export default function localRoom (vm) {
   }
 
   async function chat (text) {
-    addMessage({ text: text, type: chat, sender: 'offline user' })
+    socket.emit('chat', text)
   }
+
+  socket.on('chat', ({ player, message: text }) => {
+    addMessage({ text: text, type: chat, sender: player })
+  })
 
   // Buzzing
   const readingState = reactive({
@@ -161,20 +130,23 @@ export default function localRoom (vm) {
     readingState.revealed = false
   }
 
-  async function buzz () {
-    readingState.buzzing = true
-    timer.stop()
+  function buzz () {
+    socket.emit('buzz', Date.now())
 
-    return true
+    return waitFor('playerBuzzed', ({ winner }) => {
+      return true
+    })
   }
 
-  async function submitAnswer (submitted, question) {
-    const result = checkCorrect(submitted, question.formatted_answer, question.formatted_text, wordsIn.value)
+  socket.on('playerBuzzed', ({ winner }) => {
+    readingState.buzzing = winner
+    timer.stop()
+  })
 
-    readingState.buzzing = false
-    finishReading()
+  function submitAnswer (submitted, question) {
+    socket.emit('submitAnswer', submitted)
 
-    return result
+    waitFor('answerSubmitted')
   }
 
   return {

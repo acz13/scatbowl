@@ -25,15 +25,12 @@ const server = http.Server(app)
 const io = ioFactory(server)
 app.use(cors())
 
-app.use('/api', proxy('https://www.quizdb.org/api', { changeOrigin: true }))
-app.use('/', proxy('http://localhost:8080', { changeOrigin: true }))
-
 const SESSION_SECRET = process.env.SESSION_SECRET || 'state college academic tournament!'
 
 app.use(session({
   store: new RedisStore(),
   secret: process.env.SESSION_SECRET || 'state college academic tournament!',
-  key: 'express.session',
+  key: 'sb.session',
   resave: false,
   saveUninitialized: true,
   unset: 'destroy'
@@ -43,7 +40,10 @@ app.use(flash())
 app.use(passport.initialize())
 app.use(passport.session())
 
+
+app.use('/api', proxy('https://www.quizdb.org/api', { changeOrigin: true }))
 app.use('/auth', require('./routes/auth'))
+app.use(['/', '!**/test'], proxy('http://localhost:8080', { changeOrigin: true }))
 // app.get('/', (req, res) => {
 //   res.sendFile(path.join(__dirname, '../client/index.html'))
 // })
@@ -72,7 +72,7 @@ function joinRoom (socket, room) {
 
 // SOCKET.IO
 io.use(passportSocketIo.authorize({
-  key: 'express.session',
+  key: 'sb.session',
   secret: SESSION_SECRET,
   store: sessionStore
 }))
@@ -102,8 +102,8 @@ io.on('connection', function (socket) {
     socket.gameRoom.chat(player, message)
   })
 
-  socket.on('changeSettings', newSettings => {
-    socket.gameRoom.changeSettings(player, newSettings)
+  socket.on('changeSettings', ({ newSettings, rootKey }) => {
+    socket.gameRoom.changeSettings(player, newSettings, rootKey)
   })
 
   socket.on('buzz', time => {

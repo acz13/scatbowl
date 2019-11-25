@@ -1,10 +1,10 @@
-const passport = require('passport')
-const CustomStrategy = require('passport-custom')
-const bcrypt = require('bcrypt')
+import passport from 'passport'
+import CustomStrategy from 'passport-custom'
+import * as bcrypt from 'bcrypt'
 
-const redis = require('../db/redis')
+import redis from '../db/redis'
 
-const randomGuestID = require('../util/randomGuestID')
+import randomGuestID from '../util/randomGuestID'
 
 passport.serializeUser(async (user, cb) => {
   cb(null, { id: user.id, username: user.username, isGuest: !!user.isGuest })
