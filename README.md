@@ -1,7 +1,6 @@
 ## ~~Pending name change~~
 ## ~~Scatbowl~~ -> [Sb] Antimony
 
-=====
 Quiz Bowl but in 2019 with technology from 2015
 
 
