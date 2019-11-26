@@ -106,10 +106,10 @@ export default function liveRoom (vm) {
 
     message.id = makeID(5)
 
-    if (currentQuestion.value.hasOwnProperty('messages')) {
-      currentQuestion.value.messages.unshift(message)
+    if (currentQuestion.value.messages) {
+      currentQuestion.value.messages.value.unshift(message)
     } else {
-      currentQuestion.value.messages = [message]
+      currentQuestion.value.messages = ref([message])
     }
   }
 
@@ -129,7 +129,7 @@ export default function liveRoom (vm) {
   })
 
   // Timer and Reading
-  const { ticks: wordsIn, ...timer } = useTimer(toRefs(settings).wordDelay, true)
+  const { ticks: wordsIn, ...timer } = useTimer(toRefs(settings).wordDelay, false)
 
   function finishReading () {
     timer.stop()
@@ -163,6 +163,16 @@ export default function liveRoom (vm) {
 
     waitFor('answerSubmitted', () => true)
   }
+
+  socket.on('gameInfo', gameInfo => {
+    Object.assign(settings, gameInfo.settings)
+
+    if (gameInfo.currentQuestion) {
+      currentQuestion.value = gameInfo.currentQuestion
+
+      timer.start(gameInfo.startTime, gameInfo.resumePoint)
+    }
+  })
 
   return {
     settings,

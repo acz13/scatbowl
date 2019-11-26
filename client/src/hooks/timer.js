@@ -32,6 +32,8 @@ export function useTimer (delay, offline) {
       status.resumePoint = resumePoint
     }
 
+    console.log(startTime)
+    console.trace()
     status.startTime = Number.isInteger(startTime) ? startTime : Date.now()
 
     timeoutID = setTimeout(step(), Math.max(status.startTime - Date.now(), 0))

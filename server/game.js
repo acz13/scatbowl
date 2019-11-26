@@ -48,7 +48,7 @@ class Game { // Move to this client side eventually
 
     this.currentQuestion = null
     this.startTime = null
-    this.resumePoint = null
+    this.resumePoint = 0
     this.isBuzzing = null
     this.promptLevel = 0
     this.buzzList = null
@@ -60,6 +60,7 @@ class Game { // Move to this client side eventually
     return {
       currentQuestion: this.currentQuestion,
       startTime: this.startTime,
+      resumePoint: this.resumePoint,
       isPaused: this.isPaused,
       isBuzzing: this.isBuzzing,
       promptLevel: this.promptLevel,
@@ -282,7 +283,6 @@ class Game { // Move to this client side eventually
 
     const now = Date.now()
     this.startTime = now - now % this.settings.wordDelay + this.settings.wordDelay
-    this.resumePoint = 0
 
     this.emit('questionLoaded', {
       player: player.id,

@@ -17,7 +17,7 @@
               ></Question>
             </slide-up-down>
           </div>-->
-          <p>Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % settings.wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }}</p>
+          <p>Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % settings.wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }} | startTime: {{ timer.status.startTime }} </p>
 
           <transition-group name="fade" mode="out-in">
             <b-field v-show="readingState.buzzing || chatting" expanded key="inputs" class="controlfield">
@@ -43,9 +43,8 @@
           </transition-group>
 
           <div class="log">
-            <div :key="currentQuestion ? currentQuestion.order_id : 'blank'" class="log-item">
+            <div v-show-slide:400:swing:startOpening="open" v-if="currentQuestion" :key="currentQuestion ? currentQuestion.order_id : 'blank'" class="log-item">
               <Question
-                v-show-slide:400:swing:startOpening="open"
                 class="question mainQuestion"
                 :wordsIn="wordsIn"
                 v-bind="currentQuestion || {}"
@@ -55,11 +54,11 @@
                 :formatted_answer="readingState.revealed ? currentQuestion.formatted_answer : ''"
                 :color="currentQuestion.order_id"
               ></Question>
-              <div class="messages" v-if="currentQuestion">
-                <div v-for="message in currentQuestion.messages" class="sb-message" :key="message.id" v-show-slide:400:swing:startOpening="open">
+              <ul class="messages" v-if="currentQuestion.messages">
+                <li v-for="message in currentQuestion.messages.value" class="sb-message" :key="message.id" v-show-slide:400:swing:startOpening="open">
                   <Message v-bind="message"></Message>
-                </div>
-              </div>
+                </li>
+              </ul>
             </div>
             <div
               class="log-item"
@@ -73,13 +72,11 @@
                 startAction="startClosing"
                 :color="question.order_id"
               ></Question>
-              <div class="messages">
-                <div class="messages" v-if="question">
-                  <div v-for="message in question.messages" class="sb-message" :key="message.id">
-                    <Message v-bind="message"></Message>
-                  </div>
-                </div>
-              </div>
+              <ul class="messages" v-if="question.messages">
+                <li v-for="message in question.messages.value" class="sb-message" :key="message.id">
+                  <Message v-bind="message"></Message>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
@@ -117,7 +114,7 @@
   margin-bottom: 0.75rem;
 }
 
-.log-item {
+.log-item > *:last-child {
   margin-bottom: 1rem;
   /* display: block; */
 }
@@ -240,7 +237,7 @@ export default {
       }
     })
 
-    nextQuestion()
+    // nextQuestion()
 
     return {
       settings,

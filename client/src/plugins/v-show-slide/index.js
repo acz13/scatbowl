@@ -236,7 +236,8 @@ const VShowSlide = {
     el.style.visibility = 'visible'
 
     // Set element height to scroll height
-    let scrollHeight = el.scrollHeight
+    let scrollHeight = el.scrollHeight + el.clientHeight
+    console.log(scrollHeight)
     el.style.height = `${scrollHeight}px`
 
     // Reset element height to auto after animating
