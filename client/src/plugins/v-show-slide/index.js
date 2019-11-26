@@ -195,7 +195,10 @@ const VShowSlide = {
       el.style.visibility = 'hidden'
     }
 
-    el.style.overflow = 'hidden'
+    el.style.overflowY = 'hidden'
+
+    el.classList.add('sliding')
+
     el.style.transition = `height ${easing} ${durationInSeconds}`
 
     if (startAction === "open") {
@@ -236,7 +239,7 @@ const VShowSlide = {
     el.style.visibility = 'visible'
 
     // Set element height to scroll height
-    let scrollHeight = el.scrollHeight + el.clientHeight
+    let scrollHeight = el.scrollHeight
     console.log(scrollHeight)
     el.style.height = `${scrollHeight}px`
 

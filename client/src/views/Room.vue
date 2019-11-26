@@ -17,7 +17,9 @@
               ></Question>
             </slide-up-down>
           </div>-->
-          <p>Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % settings.wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }} | startTime: {{ timer.status.startTime }} </p>
+          <div class="debug">
+            Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % settings.wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }} | startTime: {{ timer.status.startTime }}
+          </div>
 
           <transition-group name="fade" mode="out-in">
             <b-field v-show="readingState.buzzing || chatting" expanded key="inputs" class="controlfield">
@@ -52,7 +54,6 @@
                 :revealed="readingState.revealed"
                 ref="mainQuestion"
                 :formatted_answer="readingState.revealed ? currentQuestion.formatted_answer : ''"
-                :color="currentQuestion.order_id"
               ></Question>
               <ul class="messages" v-if="currentQuestion.messages">
                 <li v-for="message in currentQuestion.messages.value" class="sb-message" :key="message.id" v-show-slide:400:swing:startOpening="open">
@@ -70,7 +71,6 @@
                 class="question"
                 revealed
                 startAction="startClosing"
-                :color="question.order_id"
               ></Question>
               <ul class="messages" v-if="question.messages">
                 <li v-for="message in question.messages.value" class="sb-message" :key="message.id">
@@ -114,9 +114,20 @@
   margin-bottom: 0.75rem;
 }
 
+.log-item {
+  padding: 1px;
+  overflow-y: hidden;
+}
+
 .log-item > *:last-child {
   margin-bottom: 1rem;
   /* display: block; */
+}
+
+.debug {
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
 </style>

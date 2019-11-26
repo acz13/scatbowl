@@ -139,6 +139,8 @@ export default function liveRoom (vm) {
     wordsIn.value = Infinity
   }
 
+  socket.on('finishReading', finishReading)
+
   function resetReading () {
     timer.reset()
     readingState.buzzing = false
@@ -161,7 +163,10 @@ export default function liveRoom (vm) {
   function submitAnswer (submitted, question) {
     socket.emit('submitAnswer', submitted)
 
-    waitFor('answerSubmitted', () => true)
+    waitFor('answerSubmitted', () => {
+      readingState.buzzing = false
+      return true
+    })
   }
 
   socket.on('gameInfo', gameInfo => {

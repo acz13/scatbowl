@@ -208,7 +208,7 @@ class Game { // Move to this client side eventually
         this.players[player.id].gets++
       }
 
-      this.emit('answerCorrect')
+      this.emit('finishReading')
 
       this.emit('playerUpdated',
         {
@@ -220,7 +220,7 @@ class Game { // Move to this client side eventually
 
       this.players[player.id].negs++
 
-      this.emit('answerWrong')
+      this.emit('finishReading')
 
       this.emit('playerUpdated',
         {
@@ -229,6 +229,9 @@ class Game { // Move to this client side eventually
         })
     } else if (result === 'prompt' /* Handle Prompts Later */) {
       this.promptLevel++
+
+      this.emit('finishReading') // Remove after prompting implemented
+
       this.emit('answerPrompted', { answer: answer, promptLevel: this.promptLevel })
     }
   }
