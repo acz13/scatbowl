@@ -30,7 +30,7 @@ export function useGlobalKeys (handlers) {
 
   onBeforeUnmount(() => {
     for (const type in listeners) {
-      window.removeEventListener(type, listeners(type))
+      window.removeEventListener(type, listeners[type])
     }
   })
 }
