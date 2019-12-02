@@ -1,7 +1,7 @@
 <template>
   <section class="room section">
     <div class="container">
-      <div class="columns">
+      <div class="columns is-multiline">
         <div class="column is-two-thirds">
           <!-- <div tabindex="0" @keydown.space="handleBuzz" @keyup.n="dispNextQuestion">
             <slide-up-down :open="!inTransition" @enter-cancelled="inTransition = true" down class="mainQuestion">
@@ -45,7 +45,7 @@
           </transition-group>
 
           <div class="log">
-            <div v-show-slide:400:swing:startOpening="open" v-if="currentQuestion" :key="currentQuestion ? currentQuestion.order_id : 'blank'" class="log-item">
+            <div v-show-slide:400:swing:startOpening="open" v-if="currentQuestion" :key="currentQuestion ? currentQuestion.order_id : 'blank'" class="log-item sliding-closed">
               <Question
                 class="question mainQuestion"
                 :wordsIn="wordsIn"
@@ -62,7 +62,7 @@
               </ul>
             </div>
             <div
-              class="log-item"
+              class="log-item sliding-open"
               v-for="question in questionLog"
               :key="question.order_id"
             >
@@ -115,8 +115,29 @@
 }
 
 .log-item {
-  padding: 1px;
+  margin-left: -5px;
+  margin-right: -5px;
+
+  padding-left: 5px;
+  padding-right: 5px;
+
   overflow-y: hidden;
+}
+
+.log-item.sliding-closed {
+  margin-top: 0px;
+  margin-bottom: 0px;
+
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+.log-item.sliding-open {
+  margin-top: -5px;
+  margin-bottom: -5px;
+
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 .log-item > *:last-child {
@@ -130,6 +151,9 @@
   left: 0;
 }
 
+.sliding {
+  box-sizing: content-box;
+}
 </style>
 
 <script>

@@ -61,10 +61,10 @@ function joinRoom (socket, room) {
     gameRooms[room] = game.createSocketGame(io, room, {}, {}, socket.userID)
   }
 
-  console.log(socket.id)
+  console.log(`${socket.id} connected corresponding to user ${JSON.stringify(socket.request.user)}`)
   socket.emit('gameInfo', gameRooms[room].addPlayer(socket.request.user, socket.id))
   socket.gameRoom = gameRooms[room]
-  console.log('joined ' + room)
+  console.log(socket.request.user.id + ' joined ' + room)
   socket.join(room)
 }
 

@@ -193,13 +193,15 @@ const VShowSlide = {
     if (!initialState) {
       el.style.height = '0px'
       el.style.visibility = 'hidden'
+      el.classList.add('sliding-closed')
     }
 
     el.style.overflowY = 'hidden'
 
     el.classList.add('sliding')
 
-    el.style.transition = `height ${easing} ${durationInSeconds}`
+    el.style.transition = `all ${easing} ${durationInSeconds}`
+    el.style.transitionProperty = "height,padding-bottom,padding-top,margin-top,margin-bottom"
 
     if (startAction === "open") {
       vnode.context.$nextTick(() => this.slideOpen(el))
@@ -238,9 +240,11 @@ const VShowSlide = {
     // Make element visible again
     el.style.visibility = 'visible'
 
+    el.classList.remove('sliding-closed')
+    el.classList.add('sliding-open')
+
     // Set element height to scroll height
     let scrollHeight = el.scrollHeight
-    console.log(scrollHeight)
     el.style.height = `${scrollHeight}px`
 
     // Reset element height to auto after animating
@@ -264,6 +268,9 @@ const VShowSlide = {
 
     // Set animating to true
     this.setTargetPropertyByEl(el, 'isAnimating', true)
+
+    el.classList.remove('sliding-open')
+    el.classList.add('sliding-closed')
 
     let scrollHeight = el.scrollHeight
     el.style.height = `${scrollHeight}px`
