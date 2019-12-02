@@ -10,6 +10,7 @@ module.exports = {
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Headers': '*'
-    }
+    },
+    progress: false
   }
 }
