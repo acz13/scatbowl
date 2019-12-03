@@ -14,6 +14,10 @@ export function useTimer ({ delay, offline, clockDiff }) {
     resumePoint: 0
   })
 
+  const clientStartTime = computed(() => {
+    return status.startTime - clockDiff.value
+  })
+
   const ticks = ref(0)
 
   const offset = computed(() =>
@@ -32,14 +36,14 @@ export function useTimer ({ delay, offline, clockDiff }) {
       status.resumePoint = resumePoint
     }
 
-    status.startTime = Number.isInteger(startTime) ? startTime - clockDiff.value : Date.now()
+    status.startTime = Number.isInteger(startTime) ? startTime : Date.now()
 
     timeoutID = setTimeout(step(), Math.max(status.startTime - Date.now(), 0))
   }
 
   function update (now) {
     ticks.value =
-      Math.floor((now + 3 - status.startTime) / delay.value) +
+      Math.floor((now + 3 - clientStartTime.value) / delay.value) +
       status.resumePoint
     return delay.value + 3 - ((now + 3 - offset.value) % delay.value)
   }

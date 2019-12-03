@@ -11,7 +11,7 @@ import timeSync from './timeSync'
 
 export default function liveRoom (vm) {
   const socket = io('/', { query: { room: 'mytestingroom' } })
-  localStorage.debug = 'socket.io*'
+  localStorage.debug = 'socket.io-client:*'
   const sync = reactive(timeSync(socket))
 
   onBeforeUnmount(() => {
