@@ -129,6 +129,10 @@ io.on('connection', function (socket) {
   socket.on('leave', () => {
     socket.gameRoom.leave(socket.userID)
   })
+
+  socket.on('timeSync', (clientTime, cb) => {
+    cb({ client: clientTime, server: Date.now() })
+  })
 })
 
 server.listen(process.env.PORT, process.env.IP)

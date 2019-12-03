@@ -18,7 +18,7 @@
             </slide-up-down>
           </div>-->
           <div class="debug">
-            Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % settings.wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }} | startTime: {{ timer.status.startTime }}
+            Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % settings.wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }} | startTime: {{ timer.status.startTime }} | Clock offset: {{ sync.offset }}
           </div>
 
           <transition-group name="fade" mode="out-in">
@@ -201,7 +201,9 @@ export default {
       resetReading,
 
       buzz,
-      submitAnswer
+      submitAnswer,
+
+      sync
     } = localRoom(root)
 
     const questionLog = ref([])
@@ -306,7 +308,9 @@ export default {
       handleSubmit,
 
       console,
-      open
+      open,
+
+      sync
     }
   },
   // created () {

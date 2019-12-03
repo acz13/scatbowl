@@ -7,10 +7,12 @@ import makeID from '@shared/makeID'
 import { useTimer } from '@/hooks/timer'
 
 import io from 'socket.io-client'
+import timeSync from './timeSync'
 
 export default function liveRoom (vm) {
   const socket = io('/', { query: { room: 'mytestingroom' } })
   localStorage.debug = 'socket.io-client:socket'
+  const sync = reactive(timeSync(socket))
 
   onBeforeUnmount(() => {
     socket.close()
@@ -201,6 +203,8 @@ export default function liveRoom (vm) {
     resetReading,
 
     buzz,
-    submitAnswer
+    submitAnswer,
+
+    sync
   }
 }
