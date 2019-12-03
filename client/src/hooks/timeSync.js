@@ -1,4 +1,4 @@
-import { reactive, toRefs, computed } from '@vue/composition-api'
+import { reactive, toRefs, computed, onBeforeUnmount } from '@vue/composition-api'
 
 export default function timeSync (socket, interval) {
   const syncData = reactive({
@@ -28,10 +28,15 @@ export default function timeSync (socket, interval) {
   }
 
   sync()
-  setInterval(sync, interval || 5000)
+  const syncInterval = setInterval(sync, interval || 5000)
+  onBeforeUnmount(() => {
+    clearInterval(syncInterval)
+  })
 
   const offset = computed(() => {
-    return syncData.offsets.length ? syncData.offsets.reduce((a, b) => a + b) / syncData.offsets.length : null
+    return syncData.offsets.length
+      ? Math.round(syncData.offsets.reduce((a, b) => a + b) / syncData.offsets.length)
+      : null
   })
 
   return {

@@ -21,7 +21,7 @@ export function useTimer ({ delay, offline, clockDiff }) {
   const ticks = ref(0)
 
   const offset = computed(() =>
-    status.startTime % delay.value
+    clientStartTime.value % delay.value
   )
 
   const debug = reactive({
@@ -43,9 +43,9 @@ export function useTimer ({ delay, offline, clockDiff }) {
 
   function update (now) {
     ticks.value =
-      Math.floor((now + 3 - clientStartTime.value) / delay.value) +
+      Math.floor((now + 5 - clientStartTime.value) / delay.value) +
       status.resumePoint
-    return delay.value + 3 - ((now + 3 - offset.value) % delay.value)
+    return delay.value + 5 - ((now + 5 - offset.value) % delay.value)
   }
 
   function step () {
