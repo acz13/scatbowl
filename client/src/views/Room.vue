@@ -18,7 +18,7 @@
             </slide-up-down>
           </div>-->
           <div class="debug">
-            Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % settings.wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }} | startTime: {{ timer.status.startTime }} | Clock offset: {{ sync.offset }}
+            Words in: {{ wordsIn }} | Offset: {{ timer.offset.value }} | Last Update: {{ timer.debug.lastUpdate % settings.wordDelay }} | Last Timeout: {{ timer.debug.lastTimeout }} | startTime: {{ timer.status.startTime }} | Clock offset: {{ sync.offset }} | To: {{ sync.to }} | From: {{ sync.from }}
           </div>
 
           <transition-group name="fade" mode="out-in">

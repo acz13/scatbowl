@@ -131,7 +131,7 @@ io.on('connection', function (socket) {
   })
 
   socket.on('timeSync', (clientTime, cb) => {
-    cb({ client: clientTime, server: Date.now() })
+    socket.emit('timeSyncPong', { client: clientTime, server: Date.now() })
   })
 })
 
