@@ -15,6 +15,10 @@ export default function timeSync (socket, interval) {
     syncData.from = server - now
 
     syncData.offsets.push(off)
+
+    if (syncData.offsets.length > 5) {
+      syncData.offsets.shift()
+    }
   }
 
   socket.on('timeSyncPong', onSync)
@@ -23,6 +27,7 @@ export default function timeSync (socket, interval) {
     socket.emit('timeSync', Date.now())
   }
 
+  sync()
   setInterval(sync, interval || 5000)
 
   const offset = computed(() => {

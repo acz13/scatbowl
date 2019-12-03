@@ -1,6 +1,6 @@
 import { reactive, ref, computed, watch } from '@vue/composition-api'
 
-export function useTimer (delay, offline) {
+export function useTimer ({ delay, offline, clockDiff }) {
   let timeoutID = null
 
   function clearTimer () {
@@ -32,7 +32,7 @@ export function useTimer (delay, offline) {
       status.resumePoint = resumePoint
     }
 
-    status.startTime = Number.isInteger(startTime) ? startTime : Date.now()
+    status.startTime = Number.isInteger(startTime) ? startTime - clockDiff.value : Date.now()
 
     timeoutID = setTimeout(step(), Math.max(status.startTime - Date.now(), 0))
   }

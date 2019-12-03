@@ -131,7 +131,11 @@ export default function liveRoom (vm) {
   })
 
   // Timer and Reading
-  const { ticks: wordsIn, ...timer } = useTimer(toRefs(settings).wordDelay, false)
+  const { ticks: wordsIn, ...timer } = useTimer({
+    delay: toRefs(settings).wordDelay,
+    offline: false,
+    clockDiff: toRefs(sync).offset
+  })
 
   function finishReading () {
     timer.stop()
