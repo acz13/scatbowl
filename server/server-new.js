@@ -46,7 +46,10 @@ app.use('/', proxy('http://localhost:8080', { changeOrigin: true }))
 //   res.sendFile(path.join(__dirname, '../client/index.html'))
 // })
 
+// const staticFileMiddleware = express.static('../client/dist')
+// app.use('/', staticFileMiddleware);
 app.use(history())
+// app.use('/', staticFileMiddleware)
 
 const gameRooms = {}
 
