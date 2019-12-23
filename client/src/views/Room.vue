@@ -1,5 +1,5 @@
 <template>
-  <section class="room section">
+  <section class="room">
     <div class="container">
       <div class="columns is-multiline">
         <div class="column is-two-thirds">
@@ -81,6 +81,11 @@
           </div>
         </div>
         <div class="column">
+          <scoreboard
+            :sortedPlayers="sortedPlayers"
+            :players="players"
+          >
+          </scoreboard>
           <settings
             :value="settings"
             :filterOptions="filterOptions"
@@ -117,6 +122,9 @@
 .log-item {
   margin-left: -5px;
   margin-right: -5px;
+
+  padding-top: 0px;
+  padding-bottom: 0px;
 
   padding-left: 5px;
   padding-right: 5px;
@@ -165,6 +173,7 @@ import BInput from 'buefy/src/components/input/Input'
 
 import Message from '@/components/Message'
 import Settings from '@/components/Settings'
+import Scoreboard from '@/components/Scoreboard'
 import Question from '@/components/Question'
 // import SlideUpDown from '@/components/SlideUpDown'
 
@@ -184,6 +193,9 @@ export default {
       changeSettings,
       changeSearchFilters,
       filterOptions,
+
+      players,
+      sortedPlayers,
 
       readingState,
 
@@ -282,6 +294,9 @@ export default {
       changeSearchFilters,
       filterOptions,
 
+      players,
+      sortedPlayers,
+
       readingState,
 
       questionLog,
@@ -350,6 +365,7 @@ export default {
   components: {
     Message,
     Settings,
+    Scoreboard,
     Question,
     BButton,
     BField,

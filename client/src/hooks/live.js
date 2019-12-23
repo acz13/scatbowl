@@ -1,4 +1,4 @@
-import { reactive, ref, toRefs, onBeforeUnmount } from '@vue/composition-api'
+import { reactive, ref, toRefs, watch, onBeforeUnmount } from '@vue/composition-api'
 
 import defaultSearchFilters from '@/assets/json/defaultSearchFilters.json'
 
@@ -11,7 +11,7 @@ import timeSync from './timeSync'
 
 export default function liveRoom (vm) {
   const socket = io('/', { query: { room: 'mytestingroom' } })
-  localStorage.debug = 'socket.io-client:*'
+  localStorage.debug = ''
   const sync = reactive(timeSync(socket))
 
   onBeforeUnmount(() => {
@@ -70,6 +70,32 @@ export default function liveRoom (vm) {
     .catch(err => {
       console.log(err + 'Using default filters')
     })
+
+  // Player / Leaderboard Management
+  const players = ref({})
+  const sortedPlayers = ref([])
+
+  function Player (initial) { Object.assign(this, initial) }
+  Object.defineProperty(Player.prototype, 'score', {
+    get: function score () {
+      return this.gets * 10 + this.powers * 15 - this.negs * 5
+    }
+  })
+
+  watch(
+    players,
+    () => {
+      sortedPlayers.value = Object.keys(players.value)
+        .sort((a, b) => players.value[b].score - players.value[a].score)
+    },
+    { deep: true }
+  )
+
+  function updatePlayer ({ player, data }) {
+    vm.$set(players.value, player, new Player(data))
+  }
+
+  socket.on('playerUpdated', updatePlayer)
 
   const currentQuestion = ref(null)
 
@@ -183,6 +209,14 @@ export default function liveRoom (vm) {
 
       timer.start(gameInfo.startTime, gameInfo.resumePoint)
     }
+
+    if (gameInfo.players) {
+      const newPlayers = {}
+      for (const player in gameInfo.players) {
+        newPlayers[player] = new Player(gameInfo.players[player])
+      }
+      players.value = newPlayers
+    }
   })
 
   return {
@@ -190,6 +224,9 @@ export default function liveRoom (vm) {
     changeSettings,
     changeSearchFilters,
     filterOptions,
+
+    players,
+    sortedPlayers,
 
     readingState,
 

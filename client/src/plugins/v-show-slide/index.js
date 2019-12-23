@@ -202,6 +202,7 @@ const VShowSlide = {
 
     el.style.transition = `all ${easing} ${durationInSeconds}`
     el.style.transitionProperty = "height,padding-bottom,padding-top,margin-top,margin-bottom"
+    el.style.willChange = "height,padding-bottom,padding-top,margin-top,margin-bottom"
 
     if (startAction === "open") {
       vnode.context.$nextTick(() => this.slideOpen(el))
