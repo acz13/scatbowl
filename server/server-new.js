@@ -36,12 +36,16 @@ app.use(session({
 }))
 
 app.use(flash())
+
+if (!process.env.PROXY) {
+  app.use('/api', proxy('https://www.quizdb.org/api', { changeOrigin: true }))
+  app.use('/', proxy('http://localhost:8080', { changeOrigin: true }))
+}
+
 app.use(passport.initialize())
 app.use(passport.session())
 
-app.use('/api', proxy('https://www.quizdb.org/api', { changeOrigin: true }))
 app.use('/auth', require('./routes/auth'))
-app.use('/', proxy('http://localhost:8080', { changeOrigin: true }))
 // app.get('/', (req, res) => {
 //   res.sendFile(path.join(__dirname, '../client/index.html'))
 // })

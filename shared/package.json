@@ -9,7 +9,9 @@
   "dependencies": {
     "htmlparser2": "^4.0.0",
     "node-fetch": "^2.6.0",
-    "qs": "^6.8.0"
+    "qs": "^6.8.0",
+    "randomcolor": "^0.5.4",
+    "seedrandom": "^3.0.5"
   },
   "lint-staged": {
     "*.js": [

@@ -1,4 +1,4 @@
-<template functional>
+<template>
   <table class="table card is-fullwidth">
     <thead>
       <tr>
@@ -10,12 +10,12 @@
       </tr>
     </thead>
     <transition-group name="flip-list" tag="tbody">
-      <tr v-for="player in props.sortedPlayers" :key="player">
-        <td>{{ props.players[player].score }}</td>
-        <td>{{ player }}</td>
-        <td>{{ props.players[player].powers}}</td>
-        <td>{{ props.players[player].gets }}</td>
-        <td>{{ props.players[player].negs }}</td>
+      <tr v-for="player in sortedPlayers" :key="player">
+        <td class="has-text-weight-bold">{{ players[player].score }}</td>
+        <td class="has-text-weight-bold" :style="{ color: '#' + COLORS[players[player].color].standard}">{{ players[player].username }}</td>
+        <td>{{ players[player].powers }}</td>
+        <td>{{ players[player].gets }}</td>
+        <td>{{ players[player].negs }}</td>
       </tr>
     </transition-group>
   </table>
@@ -26,3 +26,17 @@
   transition: transform 1s;
 }
 </style>
+
+<script>
+import { COLORS } from 'sb-shared/colors'
+
+export default {
+  props: {
+    players: Object,
+    sortedPlayers: Array
+  },
+  created () {
+    this.COLORS = COLORS
+  }
+}
+</script>
